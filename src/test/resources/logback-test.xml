@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration debug="true" scan="true" scanPeriod="5 minutes">
+
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
+        <delay>3000</delay>
+    </shutdownHook>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%thread|%logger{0}|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender"/>
+
+    <appender name="MESSAGE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="METRICS"/>
+    </root>
+
+    <logger level="DEBUG" name="com.after_sunrise.dukascopy.proxy"/>
+
+    <logger level="TRACE" additivity="false" name="com.after_sunrise.dukascopy.proxy.Subscription">
+        <!-- <appender-ref ref="MESSAGE"/> -->
+    </logger>
+
+</configuration>
