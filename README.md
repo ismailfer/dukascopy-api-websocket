@@ -45,6 +45,13 @@ You can configure various properties:
 - Websocket port number
 - Instrument list to pre-subscribe to.
 
+
+Due to a limitation in spring boot framework with running native websockets (instead of websocket stomp/sockjs);
+the application will be running on two ports:
+- 7080 runs RestAPI (using spring boot rest controller)
+- 7081 runs standard Websocket API (using Jetty native websocket)
+
+
 ### RestAPI
 
 To get historical bar data:
