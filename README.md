@@ -226,7 +226,7 @@ Order Book Payload is a JSON object (`application/json`)
 To unsubscribe; just close the connection.
 
 
-## Bulding from Source
+## Building from Source
 
 JDK 11 or later is required. Make sure the `JAVA_HOME` environment variable is configured.
 
@@ -242,4 +242,44 @@ cd dukas-api-websocket
 mvn clean package
 
 ```
+
+## Deployment to Docker / Kubenetes
+
+This application have been dockerized (see Dockerfile).
+
+Docker image:
+
+[]()
+
+To download docker image:
+
+```shell script
+
+docker pull ismailfer/dukascopy-api:latest
+
+```
+
+To run docker image:
+
+```shell script
+
+docker run --name dukascopy-api -d -p 7080:7080 -p 7081:7081 ismailfer/dukascopy-api:latest
+
+```
+
+If you want to build a docker image; make sure to update the correct Dukascopy server URL, username and password.
+
+Alternatively you can edit Dockerfile and update the application parameters.
+
+To build a docker image:
+
+```shell script
+
+docker build --tag dukascopy-api:1.0 .
+
+```
+
+
+
+
 

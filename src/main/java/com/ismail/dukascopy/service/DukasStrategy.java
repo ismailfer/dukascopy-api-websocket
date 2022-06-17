@@ -49,8 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DukasStrategy implements IStrategy
 {
 
-    private final Clock clock;
-
     private final DukasConfig config;
 
     private final AtomicReference<IContext> reference = new AtomicReference<>();
@@ -73,8 +71,6 @@ public class DukasStrategy implements IStrategy
     @Autowired
     public DukasStrategy(Clock clock, DukasConfig config)
     {
-
-        this.clock = Objects.requireNonNull(clock, "Clock is required.");
 
         this.config = Objects.requireNonNull(config, "Configuration is required.");
 
@@ -146,7 +142,7 @@ public class DukasStrategy implements IStrategy
 
         }
 
-        log.info("onMessage() " + message);
+       // log.info("onMessage() " + message);
 
         //  template.convertAndSend(TOPIC_MESSAGE, map);
 
@@ -155,7 +151,7 @@ public class DukasStrategy implements IStrategy
     @Override
     public void onAccount(IAccount account)
     {
-        log.info("onAccount() " + account);
+        // log.info("onAccount() " + account);
 
         // Map<String, Object> map = convertAccount(account);
 
