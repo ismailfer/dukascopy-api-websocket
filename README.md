@@ -9,15 +9,30 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 * REST interface for simple request/response communication.
 * Websocket interface for real-time top of book, and full order book feed
 * Automatic connection management with JForex platform. (cf: connect, throttled-reconnect, instrument subscription, ...)
+* Top of book data feed
+* Order book (10 levels) data feed
+* Account feed
+* Candle data feed
+* Restful requests for instrument data, account data, candle data, order book data, top of book data
 * Pure Java application, requiring no additional installations other than the Java Runtime Environment.
 * Spring Boot framework
 * Jetty native Websocket api
-
+* Placing of orders to JForex (not implemented yet)
 
 **dukas-api-websocket** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
 
 
-
+## Technology Stack
+- Maven project; uses central maven repository; as well as Dukascopy maven repository
+- Spring Boot
+- Rest API
+- Websockets
+- Jackson Json serialization/deserialization
+- In-memory queues
+- Multi-threading environment
+- Fault recovery
+- Docker
+- Kubernetes
 
 ## Getting Started
 
