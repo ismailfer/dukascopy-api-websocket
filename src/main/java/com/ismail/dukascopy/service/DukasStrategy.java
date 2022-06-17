@@ -24,9 +24,11 @@ import com.dukascopy.api.IMessage;
 import com.dukascopy.api.IStrategy;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
+import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ismail.dukascopy.config.DukasConfig;
+import com.ismail.dukascopy.model.Candle;
 import com.ismail.dukascopy.model.DukasSubscription;
 import com.ismail.dukascopy.model.OrderBook;
 import com.ismail.dukascopy.model.OrderBookEntry;
@@ -165,7 +167,7 @@ public class DukasStrategy implements IStrategy
     @Override
     public void onTick(Instrument instrument, ITick tick)
     {
-        log.info("onTick << " + instrument.getName() + ": " + tick.toString());
+        // log.info("onTick << " + instrument.getName() + ": " + tick.toString());
 
         // --------------------------------------------------------------------------------------
         // Send TOB
@@ -283,6 +285,38 @@ public class DukasStrategy implements IStrategy
     public void onBar(Instrument instrument, Period period, IBar askBar, IBar bidBar)
     {
         log.trace("onBar() " + instrument.getName() + ": " + askBar);
+    }
+
+    /**
+     * Gets historical data
+     * 
+     * @param instrument
+     * @param period
+     * @param pOfferSide
+     * @param timeFrom
+     * @param timeTo
+     * @return
+     * @throws Exception
+     */
+    public List<IBar> getHistData(Instrument instrument, Period period, OfferSide pOfferSide, long timeFrom, long timeTo) throws Exception
+    {
+      
+        if (instrument == null || period == null)
+        {
+            return null;
+        }
+
+        IContext context = reference.get();
+
+        if (context == null)
+        {
+            return null;
+        }
+
+        List<IBar> bars = context.getHistory().getBars(instrument, period, pOfferSide, timeFrom, timeTo);
+
+        return bars;
+        
     }
 
     public DukasSubscription adjustSubscription(String id, Set<Instrument> instruments)

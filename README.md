@@ -45,6 +45,38 @@ You can configure various properties:
 - Websocket port number
 - Instrument list to pre-subscribe to.
 
+### RestAPI
+
+To get historical bar data:
+* GET `http://localhost:908/histdata?instID=EURUSD&period=60&timeFrom=0&timeTo=0`
+
+```json
+[
+    {
+        "symbol": "EURUSD",
+        "open": 1.05137,
+        "high": 1.05137,
+        "low": 1.05137,
+        "close": 1.05137,
+        "volume": 0.0,
+        "ticks": 0,
+        "time": 1655003040000,
+        "period": 60
+    },
+    {
+        "symbol": "EURUSD",
+        "open": 1.05137,
+        "high": 1.05137,
+        "low": 1.05137,
+        "close": 1.05137,
+        "volume": 0.0,
+        "ticks": 0,
+        "time": 1655003100000,
+        "period": 60
+    },
+    ...
+]
+```
 
 ### WebSocket
 
