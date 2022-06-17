@@ -5,7 +5,6 @@
 
 
 
-
 **dukas-api** is a standalone server application for providing REST/WebSocket access to [Dukascopy][dukascopy-home]'s JForex trading platform.
 
 The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by programming custom Java applications.
@@ -31,6 +30,8 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 * User interface application (web, android, mobile, etc)
 
 * Custom Automated Strategy trader in java or any language that supports Rest API / Websockets
+
+* [Execution Algos Microservices](https://github.com/ismailfer/spring-boot-crypto-execution-algo-client) uses this project to execute trades on Forex Market
 
 
 ## Technology Stack
@@ -282,7 +283,7 @@ This application have been dockerized (see Dockerfile).
 
 Docker image:
 
-[]()
+[https://hub.docker.com/r/ismailfer/dukascopy-api](https://hub.docker.com/r/ismailfer/dukascopy-api)
 
 To download docker image:
 

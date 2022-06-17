@@ -172,7 +172,7 @@ public class DukasStrategy implements IStrategy
         if (tobSubscribersSize > 0)
         {
             TopOfBook st = new TopOfBook();
-            st.symbol = instrument.getName().replace("/", "");
+            st.symbol = instrument.getName().replace("/", "").replace(".", "");
             st.bid = tick.getBid();
             st.ask = tick.getAsk();
             st.askQty = tick.getAskVolume();
@@ -228,7 +228,7 @@ public class DukasStrategy implements IStrategy
         if (orderBookSubscribersSize > 0)
         {
             OrderBook st = new OrderBook();
-            st.symbol = instrument.getName().replace("/", "");
+            st.symbol = instrument.getName().replace("/", "").replace(".", "");
             st.bid = tick.getBid();
             st.bidQty = tick.getBidVolume();
             st.ask = tick.getAsk();
