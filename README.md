@@ -27,6 +27,11 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 
 **dukas-api-websocket** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
 
+## Potential uses of Dukascopy-api
+* User interface application (web, android, mobile, etc)
+
+* Custom Automated Strategy trader in java or any language that supports Rest API / Websockets
+
 
 ## Technology Stack
 - Maven project; uses central maven repository; as well as Dukascopy maven repository
