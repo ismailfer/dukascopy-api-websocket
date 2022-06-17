@@ -26,6 +26,7 @@ import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
+import com.dukascopy.api.instrument.IFinancialInstrument.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ismail.dukascopy.config.DukasConfig;
 import com.ismail.dukascopy.model.Candle;
@@ -175,12 +176,18 @@ public class DukasStrategy implements IStrategy
         if (tobSubscribersSize > 0)
         {
             TopOfBook st = new TopOfBook();
-            st.symbol = instrument.getName();
+            st.symbol = instrument.getName().replace("/", "");
             st.bid = tick.getBid();
-            st.bidQty = tick.getBidVolume();
             st.ask = tick.getAsk();
             st.askQty = tick.getAskVolume();
+            st.bidQty = tick.getBidVolume();
 
+            if (instrument.getType() == Type.FOREX)
+            {
+                st.bidQty *= 100000.0;
+                st.askQty *= 100000.0;
+            }
+            
             int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
@@ -190,6 +197,8 @@ public class DukasStrategy implements IStrategy
             st.spread = st.ask - st.bid;
             st.spreadBps = 10000.0 * (st.spread) / st.ask;
 
+            
+            
             st.last = (st.ask + st.bid) / 2.0;
 
             st.live = true;
@@ -223,12 +232,18 @@ public class DukasStrategy implements IStrategy
         if (orderBookSubscribersSize > 0)
         {
             OrderBook st = new OrderBook();
-            st.symbol = instrument.getName();
+            st.symbol = instrument.getName().replace("/", "");
             st.bid = tick.getBid();
             st.bidQty = tick.getBidVolume();
             st.ask = tick.getAsk();
             st.askQty = tick.getAskVolume();
-
+            
+            if (instrument.getType() == Type.FOREX)
+            {
+                st.bidQty *= 100000.0;
+                st.askQty *= 100000.0;
+            }
+            
             int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
@@ -254,6 +269,12 @@ public class DukasStrategy implements IStrategy
 
                     OrderBookEntry askEntry = new OrderBookEntry(tick.getAskVolumes()[i], tick.getAsks()[i]);
                     st.asks.add(askEntry);
+                    
+                    if (instrument.getType() == Type.FOREX)
+                    {
+                        bidEntry.quantity *= 100000.0;
+                        askEntry.quantity *= 100000.0;
+                    }
                 }
             }
 

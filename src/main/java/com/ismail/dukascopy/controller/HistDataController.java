@@ -13,6 +13,7 @@ import com.dukascopy.api.IBar;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
+import com.dukascopy.api.instrument.IFinancialInstrument.Type;
 import com.ismail.dukascopy.model.ApiException;
 import com.ismail.dukascopy.model.Candle;
 import com.ismail.dukascopy.service.DukasStrategy;
@@ -95,7 +96,7 @@ public class HistDataController
                  for (IBar bar : bars)
                  {
                      Candle st = new Candle();
-                     st.symbol = instID;
+                     st.symbol = instID.replace("/", "");
                      st.open = bar.getOpen();
                      st.high = bar.getHigh();
                      st.low = bar.getLow();
@@ -103,6 +104,11 @@ public class HistDataController
                      st.volume = bar.getVolume();
                      st.time = bar.getTime();
                      st.period = period;
+                     
+                     if (instrument.getType() == Type.FOREX)
+                     {
+                         st.volume *= 100000.0;
+                     }
                      
                      list.add(st);
                  }

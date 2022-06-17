@@ -48,7 +48,7 @@ You can configure various properties:
 ### RestAPI
 
 To get historical bar data:
-* GET `http://localhost:908/histdata?instID=EURUSD&period=60&timeFrom=0&timeTo=0`
+* GET `http://localhost:7080/histdata?instID=EURUSD&period=60&timeFrom=0&timeTo=0`
 
 ```json
 [
@@ -86,16 +86,16 @@ You can either subscribe to topOfBook; or to the full order book:
 
 
 To subscribe to Top of Book with the configured list of instruments:
-* CONNECT : `ws://localhost:9081/ticker?topOfBook=true`
+* CONNECT : `ws://localhost:7081/ticker?topOfBook=true`
 
 To subscribe to Top of Book; with custom list of instruments
-* CONNECT : `ws://localhost:9081/ticker?topOfBook=true&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
+* CONNECT : `ws://localhost:7081/ticker?topOfBook=true&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
 
 To subscribe to Order Book (10 levels) with the configured list of instruments:
-* CONNECT : `ws://localhost:9081/ticker?topOfBook=false`
+* CONNECT : `ws://localhost:7081/ticker?topOfBook=false`
 
 To subscribe to Order Book; with custom list of instruments
-* CONNECT : `ws://localhost:9081/ticker?topOfBook=false&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
+* CONNECT : `ws://localhost:7081/ticker?topOfBook=false&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
 
 
 
