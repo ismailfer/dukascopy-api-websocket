@@ -1,4 +1,4 @@
-# dukas-api
+# dukascopy-api-websocket
 [![Build Status][travis-icon]][travis-page]
 
 **dukas-api** is a standalone server application for providing REST/WebSocket access to [Dukascopy][dukascopy-home]'s JForex trading platform.
