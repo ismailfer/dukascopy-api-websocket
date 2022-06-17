@@ -1,10 +1,14 @@
 package com.ismail.dukascopy.controller;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 
+import com.dukascopy.api.Instrument;
 import com.ismail.dukascopy.service.DukasService;
 import com.ismail.dukascopy.service.DukasStrategy;
 import com.ismail.dukascopy.service.DukasSubscriber;
@@ -55,6 +59,42 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
         // app = DukascopyApplication.getInstance();
         dukasService = DukasService.getInstance();
         strategy = dukasService.strategy;
+
+        // --------------------------------------------------------------------------------------------------
+        // Optional: subscribe to a list of instrumentIDs; otherwise return default list
+        // --------------------------------------------------------------------------------------------------
+        String instIDs = DukasUtil.get(sess.getUpgradeRequest(), "instIDs", null);
+
+        if (DukasUtil.isDefined(instIDs))
+        {
+            List<String> instIDList = DukasUtil.splitToArrayList(instIDs, ',');
+            
+            Set<Instrument> instruments = new TreeSet<>();
+
+            for (String instrumentID : instIDList)
+            {
+                Instrument instrument = Instrument.valueOf(instrumentID);
+
+                if (instrument != null)
+                {
+                    instruments.add(instrument);
+                }
+                else
+                {
+                    log.warn("Invalid instrument: " + instrumentID);
+                }
+            }
+            
+            if (instruments.size() > 0)
+            {
+                strategy.adjustSubscription("new-sub-"+System.currentTimeMillis(), instruments);
+            }
+        }
+
+        // --------------------------------------------------------------------------------------------------
+        // true => TopOfBook
+        // false => OrderBook
+        // --------------------------------------------------------------------------------------------------
 
         tob = DukasUtil.getb(sess.getUpgradeRequest(), "topOfBook", true);
 

@@ -53,11 +53,18 @@ WebSocket streaming interface can be accessed via standard websocket client
 You can either subscribe to topOfBook; or to the full order book:
 
 
-To subscribe to Top of Book:
+To subscribe to Top of Book with the configured list of instruments:
 * CONNECT : `ws://localhost:9081/ticker?topOfBook=true`
 
-To subscribe to Order Book (10 levels):
+To subscribe to Top of Book; with custom list of instruments
+* CONNECT : `ws://localhost:9081/ticker?topOfBook=true&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
+
+To subscribe to Order Book (10 levels) with the configured list of instruments:
 * CONNECT : `ws://localhost:9081/ticker?topOfBook=false`
+
+To subscribe to Order Book; with custom list of instruments
+* CONNECT : `ws://localhost:9081/ticker?topOfBook=false&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
+
 
 
 Top Of Book Payload is a JSON object (`application/json`)  
