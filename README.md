@@ -1,5 +1,4 @@
 # dukascopy-api-websocket
-[![Build Status][travis-icon]][travis-page]
 
 **dukas-api** is a standalone server application for providing REST/WebSocket access to [Dukascopy][dukascopy-home]'s JForex trading platform.
 
@@ -15,7 +14,7 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 * Jetty native Websocket api
 
 
-**dukas-api** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
+**dukas-api-websocket** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
 
 
 
