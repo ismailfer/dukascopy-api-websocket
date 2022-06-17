@@ -1,5 +1,11 @@
 # dukascopy-api-websocket
 
+
+![plot](./docs/dukascopy-api-architecture.png)
+
+
+
+
 **dukas-api** is a standalone server application for providing REST/WebSocket access to [Dukascopy][dukascopy-home]'s JForex trading platform.
 
 The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by programming custom Java applications.
