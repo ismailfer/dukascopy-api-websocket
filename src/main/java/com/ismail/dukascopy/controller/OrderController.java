@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
+import com.dukascopy.api.IOrder.State;
 import com.ismail.dukascopy.model.ApiException;
 import com.ismail.dukascopy.model.NewOrderResp;
 import com.ismail.dukascopy.model.OrderSide;
@@ -39,15 +40,24 @@ public class OrderController
         try
         {
             long timeout = 5000;
-            
+
             IOrder order = strategy.submitOrder(clientOrderID, instrument, side, orderType, quantity, price, timeout);
 
             if (order != null)
             {
                 resp.setDukasOrderID(order.getId());
-                resp.setFillPrice(order.getOpenPrice());
+                
 
-                resp.setFillQty(order.getAmount() * 1000000.0);
+                if (order.getState() == State.FILLED)
+                {
+                    resp.setFillPrice(order.getOpenPrice());
+                    resp.setFillQty(order.getAmount() * 1000000.0);
+                }
+                else
+                {
+                    resp.setFillPrice(0.0);
+                    resp.setFillQty(0.0);
+                }
 
                 resp.setOrderSuccess(true);
             }
