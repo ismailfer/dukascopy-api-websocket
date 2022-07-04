@@ -22,7 +22,7 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 * Pure Java application, requiring no additional installations other than the Java Runtime Environment.
 * Spring Boot framework
 * Jetty native Websocket api
-* Placing of orders to JForex (not implemented yet)
+* Placing of orders to JForex 
 
 **dukas-api-websocket** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
 
