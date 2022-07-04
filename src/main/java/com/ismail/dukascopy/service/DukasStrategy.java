@@ -3,11 +3,13 @@ package com.ismail.dukascopy.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,8 +21,11 @@ import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IConnectionStatusMessage;
 import com.dukascopy.api.IContext;
+import com.dukascopy.api.IEngine;
+import com.dukascopy.api.IEngine.OrderCommand;
 import com.dukascopy.api.IInstrumentStatusMessage;
 import com.dukascopy.api.IMessage;
+import com.dukascopy.api.IOrder;
 import com.dukascopy.api.IStrategy;
 import com.dukascopy.api.ITick;
 import com.dukascopy.api.Instrument;
@@ -29,10 +34,11 @@ import com.dukascopy.api.Period;
 import com.dukascopy.api.instrument.IFinancialInstrument.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ismail.dukascopy.config.DukasConfig;
-import com.ismail.dukascopy.model.Candle;
 import com.ismail.dukascopy.model.DukasSubscription;
 import com.ismail.dukascopy.model.OrderBook;
 import com.ismail.dukascopy.model.OrderBookEntry;
+import com.ismail.dukascopy.model.OrderSide;
+import com.ismail.dukascopy.model.OrderType;
 import com.ismail.dukascopy.model.TopOfBook;
 import com.ismail.dukascopy.util.DukasUtil;
 
@@ -53,6 +59,10 @@ public class DukasStrategy implements IStrategy
 
     private final AtomicReference<IContext> reference = new AtomicReference<>();
 
+    private IContext context;
+
+    private IEngine engine = null;
+
     private ReentrantLock lock = new ReentrantLock();
 
     private ArrayList<DukasSubscriber> tobSubscribers = new ArrayList<>();
@@ -68,6 +78,12 @@ public class DukasStrategy implements IStrategy
 
     private DukasSubscription dukasSubscription = null;
 
+    private ArrayList<IOrder> orderList = new ArrayList<>();
+
+    private HashMap<String, IOrder> orderByIDMap = new HashMap<>();
+
+    private HashMap<String, IOrder> orderByClientOrderIDMap = new HashMap<>();
+
     @Autowired
     public DukasStrategy(Clock clock, DukasConfig config)
     {
@@ -82,6 +98,8 @@ public class DukasStrategy implements IStrategy
     public void onStart(IContext context)
     {
         reference.set(context);
+        this.context = context;
+        engine = context.getEngine();
 
         log.info("onStart() server time = {}", Instant.ofEpochMilli(context.getTime()));
 
@@ -109,6 +127,37 @@ public class DukasStrategy implements IStrategy
         }
 
         dukasSubscription = adjustSubscription("pre-defined-subscriptions", instruments);
+
+        try
+        {
+            // Instrument eurusd = Instrument.EURUSD;
+            // IOrder order = submitOrder("ORDER_" + System.currentTimeMillis(), eurusd, OrderSide.Buy, OrderType.Market, 100000.0, 0.0);
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        // TODO get list of orders for my strategy
+        try
+        {
+            List<IOrder> myOrderList = engine.getOrders();
+
+            if (myOrderList != null)
+            {
+                for (IOrder order : myOrderList)
+                {
+                    orderList.add(order);
+                    orderByClientOrderIDMap.put(order.getLabel(), order);
+                    orderByIDMap.put(order.getId(), order);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
     }
 
@@ -142,7 +191,7 @@ public class DukasStrategy implements IStrategy
 
         }
 
-       // log.info("onMessage() " + message);
+        // log.info("onMessage() " + message);
 
         //  template.convertAndSend(TOPIC_MESSAGE, map);
 
@@ -183,7 +232,7 @@ public class DukasStrategy implements IStrategy
                 st.bidQty *= 100000.0;
                 st.askQty *= 100000.0;
             }
-            
+
             int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
@@ -193,8 +242,6 @@ public class DukasStrategy implements IStrategy
             st.spread = st.ask - st.bid;
             st.spreadBps = 10000.0 * (st.spread) / st.ask;
 
-            
-            
             st.last = (st.ask + st.bid) / 2.0;
 
             st.live = true;
@@ -233,13 +280,13 @@ public class DukasStrategy implements IStrategy
             st.bidQty = tick.getBidVolume();
             st.ask = tick.getAsk();
             st.askQty = tick.getAskVolume();
-            
+
             if (instrument.getType() == Type.FOREX)
             {
                 st.bidQty *= 100000.0;
                 st.askQty *= 100000.0;
             }
-            
+
             int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
@@ -265,7 +312,7 @@ public class DukasStrategy implements IStrategy
 
                     OrderBookEntry askEntry = new OrderBookEntry(tick.getAskVolumes()[i], tick.getAsks()[i]);
                     st.asks.add(askEntry);
-                    
+
                     if (instrument.getType() == Type.FOREX)
                     {
                         bidEntry.quantity *= 100000.0;
@@ -305,6 +352,182 @@ public class DukasStrategy implements IStrategy
     }
 
     /**
+     * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/overview-orders-and-positions
+     * 
+     * @param clientOrderID
+     * @param instrument
+     * @param side
+     * @param orderType
+     * @param quantity
+     * @param price
+     * @return
+     * @throws Exception
+     */
+    public IOrder submitOrder(String clientOrderID, Instrument instrument, OrderSide side, OrderType orderType, double quantity, double price, long timeout) throws Exception
+    {
+        if (context == null)
+            throw new RuntimeException("Strategy context not initialized yet");
+
+        // convert OrderSide and orderType to OrderCommand
+        OrderCommand cmd = null;
+
+        if (side == OrderSide.Buy)
+        {
+            if (orderType == OrderType.Market)
+            {
+                cmd = OrderCommand.BUY;
+            }
+            else if (orderType == OrderType.Limit)
+            {
+                cmd = OrderCommand.BUY;
+            }
+            else if (orderType == OrderType.Stop)
+            {
+                cmd = OrderCommand.BUYSTOP;
+            }
+            else
+            {
+                throw new IllegalArgumentException("Invalid OrderType: " + orderType);
+            }
+        }
+        else if (side == OrderSide.Sell)
+        {
+            if (orderType == OrderType.Market)
+            {
+                cmd = OrderCommand.SELL;
+            }
+            else if (orderType == OrderType.Limit)
+            {
+                cmd = OrderCommand.SELL;
+            }
+            else if (orderType == OrderType.Stop)
+            {
+                cmd = OrderCommand.SELLSTOP;
+            }
+            else
+            {
+                throw new IllegalArgumentException("Invalid OrderType: " + orderType);
+            }
+        }
+        else
+        {
+            throw new IllegalArgumentException("Invalid OrderSide: " + side);
+        }
+
+        double slippage = 10;
+
+
+        // We have to submit the order in the same thread as the Context; using Reactive Programming
+        // So we submit a task; then wait for it to get done
+        NewOrderTask task = new NewOrderTask(clientOrderID, instrument, cmd, quantity / 1000000.0, price, slippage);
+        context.executeTask(task);
+
+        IOrder order = null;
+
+        // we have to wait for a given timeout
+        long sleepTime = 100;
+        int iterations = (int) (timeout / sleepTime);
+
+        for (int i = 0; i < iterations; i++)
+        {
+            try
+            {
+                Thread.sleep(sleepTime);
+            }
+            catch (InterruptedException ie)
+            {
+
+            }
+
+            if (task.taskDone)
+            {
+                if (task.rejectReason != null)
+                {
+                    throw new RuntimeException(task.rejectReason);
+                }
+                else
+                {
+                    return task.order;
+                }
+            }
+        }
+
+        throw new RuntimeException("Timeout submitting order");
+
+        //  return null;
+    }
+
+    public class NewOrderTask implements Callable<IOrder>
+    {
+        private String clientOrderID;
+
+        private final Instrument instrument;
+
+        private OrderCommand cmd;
+
+        private double quantity;
+
+        private double price;
+
+        private double slippage = 5;
+
+        private double stopLossPips;
+
+        // result
+
+        public IOrder order = null;
+
+        public Throwable error = null;
+
+        public String rejectReason = null;
+        
+        public boolean taskDone = false;
+
+        public NewOrderTask(String clientOrderID, Instrument instrument, OrderCommand cmd, double quantity, double price, double slippage)
+        {
+            this.clientOrderID = clientOrderID;
+            this.instrument = instrument;
+            this.cmd = cmd;
+            this.quantity = quantity;
+            this.price = price;
+            this.slippage = slippage;
+        }
+
+        public IOrder call() throws Exception
+        {
+            try
+            {
+                order = engine.submitOrder(clientOrderID, instrument, cmd, quantity, price, slippage);
+
+                log.info("order submitted " + order);
+
+                taskDone = true;
+                
+                return order;
+            }
+            catch (Throwable e)
+            {
+                error = e;
+                
+                if (e.getMessage().contains("Label not unique"))
+                {
+                    rejectReason = "Duplicate ClientOrderID: " + clientOrderID;
+                }
+                else
+                {
+                    rejectReason = e.getMessage();
+                }
+                
+                taskDone = true;
+                
+                e.printStackTrace();
+
+                return null;
+            }
+        }
+    }
+
+    /**
      * Gets historical data
      * 
      * @param instrument
@@ -317,7 +540,7 @@ public class DukasStrategy implements IStrategy
      */
     public List<IBar> getHistData(Instrument instrument, Period period, OfferSide pOfferSide, long timeFrom, long timeTo) throws Exception
     {
-      
+
         if (instrument == null || period == null)
         {
             return null;
@@ -333,7 +556,7 @@ public class DukasStrategy implements IStrategy
         List<IBar> bars = context.getHistory().getBars(instrument, period, pOfferSide, timeFrom, timeTo);
 
         return bars;
-        
+
     }
 
     public DukasSubscription adjustSubscription(String id, Set<Instrument> instruments)

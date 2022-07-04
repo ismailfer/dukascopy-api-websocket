@@ -4,7 +4,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -212,15 +214,16 @@ public class DukasService implements ISystemListener, InitializingBean, Disposab
         }
         catch (Exception e)
         {
-
             if (executor.isShutdown())
             {
                 return;
             }
 
-            long millis = config.getConnectinWait();
-
-            log.warn("IClient connection failure. Reconnecting in {} ms...", millis, e);
+            long millis = config.getConnectionWait();
+            if (millis <= 0L)
+                millis = 1000L;
+            
+            log.warn("Dukas IClient connection failure: "+ e.getMessage(), ". Reconnecting in {} ms...", millis, e);
 
             executor.schedule(this, millis, MILLISECONDS);
 

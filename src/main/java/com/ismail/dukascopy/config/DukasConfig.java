@@ -33,7 +33,7 @@ public class DukasConfig
     
     private long lifecycleWait;
     
-    private long connectinWait;
+    private long connectionWait;
 
     
     @Bean

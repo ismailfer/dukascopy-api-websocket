@@ -1,5 +1,7 @@
 package com.ismail.dukascopy.util;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -13,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 
 import com.ismail.dukascopy.model.ApiException;
-
 
 /**
  * utility
@@ -37,7 +38,6 @@ public class DukasUtil
 
     public static final long YEAR = 365L * DAY;
 
-    
     /**
      * Convert a string into HTML format string; by maintaining new lines etc
      * 
@@ -180,7 +180,6 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-
     public static boolean getParameterAsBoolean(HttpServletRequest request, String pParamName)
     {
         String str = request.getParameter(pParamName);
@@ -200,19 +199,15 @@ public class DukasUtil
         else
             return pDefaultValue;
     }
-    
-    
-    
+
     // --------------------------------------------------------------------------------------------------
     // Formatting utilities
     // --------------------------------------------------------------------------------------------------
 
-    
     public static String get(UpgradeRequest request, String pParamName, String pDefaultValue)
     {
         String val = pDefaultValue;
-               
-        
+
         Map<String, List<String>> paramMap = request.getParameterMap();
 
         if (paramMap != null)
@@ -224,24 +219,24 @@ public class DukasUtil
                 val = valList.get(0);
             }
         }
-        
+
         return val;
     }
 
     public static String get(UpgradeRequest request, String pParamName)
     {
         String val = get(request, pParamName, null);
-        
+
         if (val != null)
             return val;
         else
             throw new IllegalArgumentException("Mandatory parameter is missing: " + pParamName);
     }
-    
+
     public static boolean getb(UpgradeRequest request, String pParamName)
     {
         String str = get(request, pParamName);
-        
+
         boolean val = false;
 
         // Since we are using checkboxes for booleans; when the box is unchecked; it is not passed; so null really means false
@@ -253,8 +248,6 @@ public class DukasUtil
         return val;
     }
 
-
-
     /**
      * @param request
      * @param pParamName
@@ -264,7 +257,7 @@ public class DukasUtil
     public static boolean getb(UpgradeRequest request, String pParamName, boolean pDefaultValue)
     {
         String str = get(request, pParamName, null);
-        
+
         boolean val = pDefaultValue;
 
         // Since we are using checkboxes for booleans; when the box is unchecked; it is not passed; so null really means false
@@ -273,7 +266,30 @@ public class DukasUtil
 
         return val;
     }
-    
+
+    public static String getRemoteAddress(SocketAddress socketAddr)
+    {
+        String addr = null;
+
+        if (socketAddr instanceof InetSocketAddress)
+        {
+            InetSocketAddress isocket = (InetSocketAddress) socketAddr;
+            addr = isocket.getAddress().getHostAddress();
+        }
+        else
+        {
+            addr = socketAddr.toString();
+            if (addr.startsWith("/"))
+                addr = addr.substring(1);
+
+            int posAddr = addr.indexOf(':');
+            if (posAddr != -1)
+                addr = addr.substring(0, posAddr);
+        }
+
+        return addr;
+    }
+
     // --------------------------------------------------------------------------------------------------
     // Formatting utilities
     // --------------------------------------------------------------------------------------------------
@@ -322,20 +338,20 @@ public class DukasUtil
 
         return dateParser;
     }
-    
+
     public static String getOrderAge(long pMillis)
     {
         String age = null;
-        
-        if (pMillis>DAY)
+
+        if (pMillis > DAY)
             age = getOrderAgeInHours(pMillis);
-        else if (pMillis>HOUR)
+        else if (pMillis > HOUR)
             age = getOrderAgeInMinutes(pMillis);
-        else if (pMillis >MINUTE) 
+        else if (pMillis > MINUTE)
             age = getOrderAgeInSeconds(pMillis);
-        else 
+        else
             age = getOrderAgeInMillis(pMillis);
-        
+
         return age;
     }
 
@@ -386,8 +402,6 @@ public class DukasUtil
 
         return getOrderAgeInMillis(millis);
     }
-
-
 
     /**
      * convert millis to a amount in years / months / days / hours / minutes / seconds
@@ -484,8 +498,6 @@ public class DukasUtil
         return sb.toString().trim();
     }
 
-    
-    
     /**
      * Split a string by a given character, into sub-strings (array list
      * format),
@@ -494,10 +506,10 @@ public class DukasUtil
      * @param pDelimiter delimier
      * @return array list
      */
-    public static List<String> splitToArrayList(String pInputString, char pDelimiter )
+    public static List<String> splitToArrayList(String pInputString, char pDelimiter)
     {
         List<String> oList = new ArrayList<>();
-        
+
         // split string based on charachers
         StringBuilder sb = new StringBuilder(pInputString);
         StringBuilder sbThisRow = new StringBuilder("");
@@ -526,9 +538,8 @@ public class DukasUtil
 
             oList.add((sbThisRow.toString()).trim());
         }
-        
+
         return oList;
     }
-    
 
 }

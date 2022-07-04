@@ -81,6 +81,8 @@ the application will be running on two ports:
 
 ### RestAPI
 
+#### Get Historical Data
+
 To get historical bar data:
 * GET `http://localhost:7080/histdata?instID=EURUSD&period=60&timeFrom=0&timeTo=0`
 
@@ -111,6 +113,78 @@ To get historical bar data:
     ...
 ]
 ```
+
+
+#### Submit Orders
+
+To place a market order; issue a Post request; with the following parameters:
+- instID
+- clientOrderID
+- side
+- orderType
+- quantity
+- price
+
+##### Market Order Example
+
+* POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1003&side=Buy&orderType=Market&quantity=100000.0&price=0.0`
+
+Order Response for successful placement:
+
+```json
+{
+    "symbol": "EURUSD",
+    "clientOrderID": "ORD_1003",
+    "dukasOrderID": "218270954",
+    "fillQty": 100000.0,
+    "fillPrice": 1.04278,
+    "orderSuccess": true
+}
+```
+
+Order response for a rejected order:
+
+```json
+{
+    "symbol": "EURUSD",
+    "clientOrderID": "ORD_1003",
+    "fillQty": 0.0,
+    "fillPrice": 0.0,
+    "orderSuccess": false,
+    "rejectReason": "Duplicate ClientOrderID: ORD_1003"
+}
+```
+
+##### Limit Order Example
+
+* POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1005&side=Buy&orderType=Limit&quantity=100000.0&price=1.03`
+
+Order Response for successful placement:
+
+```json
+{
+    "symbol": "EURUSD",
+    "clientOrderID": "ORD_1005",
+    "dukasOrderID": "218271095",
+    "fillQty": 100000.0,
+    "fillPrice": 1.03,
+    "orderSuccess": true
+}
+```
+
+Order response for a rejected order:
+
+```json
+{
+    "symbol": "EURUSD",
+    "clientOrderID": "ORD_1003",
+    "fillQty": 0.0,
+    "fillPrice": 0.0,
+    "orderSuccess": false,
+    "rejectReason": "Duplicate ClientOrderID: ORD_1003"
+}
+```
+
 
 ### WebSocket
 

@@ -1,10 +1,13 @@
 package com.ismail.dukascopy.controller;
 
 import java.io.IOException;
+import java.net.SocketAddress;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 
@@ -38,6 +41,8 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
 
     private Session sess = null;
 
+    private RemoteEndpoint remoteEndpoint = null;
+
     private boolean tob = true;
 
     @Override
@@ -46,7 +51,13 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
         super.onWebSocketConnect(sess);
 
         this.sess = sess;
+        
+        sess.setIdleTimeout(Duration.ZERO);
 
+        remoteEndpoint = sess.getRemote();
+
+        String remoteAddr = DukasUtil.getRemoteAddress(sess.getRemoteAddress());
+        
         mEventQueue = new ObjectQueue<>(true);
 
         // start the event processor
@@ -68,7 +79,7 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
         if (DukasUtil.isDefined(instIDs))
         {
             List<String> instIDList = DukasUtil.splitToArrayList(instIDs, ',');
-            
+
             Set<Instrument> instruments = new TreeSet<>();
 
             for (String instrumentID : instIDList)
@@ -84,10 +95,10 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
                     log.warn("Invalid instrument: " + instrumentID);
                 }
             }
-            
+
             if (instruments.size() > 0)
             {
-                strategy.adjustSubscription("new-sub-"+System.currentTimeMillis(), instruments);
+                strategy.adjustSubscription("new-sub-" + System.currentTimeMillis(), instruments);
             }
         }
 
@@ -107,7 +118,7 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
             strategy.subscribeToOrderBook(this);
         }
 
-        log.info("onWebSocketConnect() << " + strategy);
+        log.info("onWebSocketConnect() << ", remoteAddr);
 
     }
 
@@ -154,9 +165,11 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
 
     private void sendMessage_(String text) throws IOException
     {
-        log.info("sendMessage() >> " + text);
+        if (log.isDebugEnabled())
+            log.debug("sendMessage() >> " + text);
 
-        getSession().getRemote().sendString(text);
+        if (sess.isOpen())
+            remoteEndpoint.sendString(text);
     }
 
     @Override

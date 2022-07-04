@@ -10,7 +10,7 @@
         </layout>
     </appender>
 
-    <logger name="com.ismail" level="debug" additivity="false">
+    <logger name="com.ismail" level="info" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
 
