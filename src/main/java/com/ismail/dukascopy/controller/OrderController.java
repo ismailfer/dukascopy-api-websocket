@@ -10,6 +10,7 @@ import com.dukascopy.api.IOrder;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.IOrder.State;
 import com.ismail.dukascopy.model.ApiException;
+import com.ismail.dukascopy.model.ClosePositionResp;
 import com.ismail.dukascopy.model.NewOrderResp;
 import com.ismail.dukascopy.model.OrderSide;
 import com.ismail.dukascopy.model.OrderType;
@@ -70,6 +71,39 @@ public class OrderController
             resp.setOrderSuccess(false);
 
             // throw new ApiException("Server error: " + e.getMessage());
+        }
+
+        return resp;
+    }
+
+    @RequestMapping(value = "/close", method = RequestMethod.POST)
+    public ClosePositionResp closePosition(@RequestParam String clientOrderID)
+    {
+
+        ClosePositionResp resp = new ClosePositionResp();
+        resp.setClientOrderID(clientOrderID);
+
+        try
+        {
+            long timeout = 5000;
+
+            IOrder order = strategy.submitCloseOrder(clientOrderID, timeout);
+
+            if (order != null)
+            {
+                resp.setOrderState(order.getState());
+                resp.setCloseSuccess(true);
+            }
+            
+            return resp;
+        }
+        catch (Exception e)
+        {
+            log.error("submitOrder() error: ", e.getMessage(), e);
+
+            resp.setRejectReason(e.getMessage());
+            resp.setCloseSuccess(false);
+
         }
 
         return resp;
