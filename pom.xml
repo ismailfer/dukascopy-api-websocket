@@ -17,7 +17,7 @@
 	<packaging>war</packaging>
 
 	<properties>
-		<java.version>17</java.version>
+		<java.version>11</java.version>
 		<skipTests>true</skipTests>
 
 		<jetty.version>10.0.9</jetty.version>

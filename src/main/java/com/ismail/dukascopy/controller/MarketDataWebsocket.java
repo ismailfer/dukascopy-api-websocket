@@ -1,7 +1,6 @@
 package com.ismail.dukascopy.controller;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
