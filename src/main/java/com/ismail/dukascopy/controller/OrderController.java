@@ -17,6 +17,12 @@ import com.ismail.dukascopy.service.DukasStrategy;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Submit new orders to the Strategy
+ * 
+ * @author ismail
+ * @since 20220705
+ */
 @RestController
 @Slf4j
 public class OrderController
