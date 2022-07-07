@@ -22,9 +22,7 @@ public class ClosePositionResp
 {           
 
     public String clientOrderID = null;
-
-    public State orderState = null;
-    
+  
     public boolean closeSuccess = false;
     
     public String rejectReason = null;

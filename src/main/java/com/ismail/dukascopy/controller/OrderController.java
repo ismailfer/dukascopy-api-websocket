@@ -87,14 +87,9 @@ public class OrderController
         {
             long timeout = 5000;
 
-            IOrder order = strategy.submitCloseOrder(clientOrderID, timeout);
+            strategy.submitClosePosition(clientOrderID, timeout);
+            resp.setCloseSuccess(true);
 
-            if (order != null)
-            {
-                resp.setOrderState(order.getState());
-                resp.setCloseSuccess(true);
-            }
-            
             return resp;
         }
         catch (Exception e)

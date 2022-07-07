@@ -532,7 +532,7 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public IOrder submitCloseOrder(String clientOrderID,  long timeout) throws Exception
+    public IOrder submitClosePosition(String clientOrderID,  long timeout) throws Exception
     {
         if (context == null)
             throw new RuntimeException("Strategy context not initialized yet");
@@ -540,41 +540,28 @@ public class DukasStrategy implements IStrategy
         
         // We have to submit the order in the same thread as the Context; using Reactive Programming
         // So we submit a task; then wait for it to get done
-        CloseOrderTask task = new CloseOrderTask(clientOrderID);
+        ClosePositionTask task = new ClosePositionTask(clientOrderID);
         context.executeTask(task);
 
         // we have to wait for a given timeout
         long sleepTime = 100;
-        int iterations = (int) (timeout / sleepTime);
+        Thread.sleep(sleepTime);
 
-        for (int i = 0; i < iterations; i++)
+        if (task.taskDone)
         {
-            try
+            if (task.rejectReason != null)
             {
-                Thread.sleep(sleepTime);
+                throw new RuntimeException(task.rejectReason);
             }
-            catch (InterruptedException ie)
+            else
             {
-
-            }
-
-            if (task.taskDone)
-            {
-                if (task.rejectReason != null)
-                {
-                    throw new RuntimeException(task.rejectReason);
-                }
-                else
-                {
-                    return task.order;
-                }
+                return task.order;
             }
         }
 
-        throw new RuntimeException("Timeout submitting order");
-
+        return null;
     }
-    public class CloseOrderTask implements Callable<IOrder> {
+    public class ClosePositionTask implements Callable<IOrder> {
 
         private String clientOrderID;
         public IOrder order = null;
@@ -582,7 +569,7 @@ public class DukasStrategy implements IStrategy
         public Throwable error = null;
         public String rejectReason = null;
 
-        public CloseOrderTask(String clientOrderID)
+        public ClosePositionTask(String clientOrderID)
         {
             this.clientOrderID = clientOrderID;
         }
@@ -596,18 +583,15 @@ public class DukasStrategy implements IStrategy
                 if (order != null) {
                     order.close();
                 }
-
+                taskDone = true;
 
                 log.info("order closed: " + order);
-
-                taskDone = true;
                 
                 return order;
             }
             catch (Throwable e)
             {
                 error = e;
-                
                 if (e.getMessage().contains("Order not found"))
                 {
                     rejectReason = "Order not found: " + clientOrderID;
