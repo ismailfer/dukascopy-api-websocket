@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
@@ -33,6 +34,7 @@ import com.dukascopy.api.OfferSide;
 import com.dukascopy.api.Period;
 import com.dukascopy.api.instrument.IFinancialInstrument.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ismail.dukascopy.DukasConstants;
 import com.ismail.dukascopy.config.DukasConfig;
 import com.ismail.dukascopy.model.DukasSubscription;
 import com.ismail.dukascopy.model.OrderBook;
@@ -351,6 +353,50 @@ public class DukasStrategy implements IStrategy
         log.trace("onBar() " + instrument.getName() + ": " + askBar);
     }
 
+
+    /**
+     * @param clientOrderID
+     * @param dukasOrderID
+     * @return
+     * @throws Exception
+     */
+    public IOrder getPosition(String clientOrderID, String dukasOrderID) throws Exception
+    {
+        if (context == null)
+            throw new RuntimeException("Strategy context not initialized yet");
+
+        // Lookup the order
+
+        IOrder order = null;
+
+        // Give priority to DukasOrderID
+
+        if (DukasUtil.isDefined(dukasOrderID))
+        {
+            order = engine.getOrderById(dukasOrderID);
+
+            if (order == null)
+                throw new RuntimeException("Invalid DukasOrderID " + dukasOrderID);
+        }
+        // Then ClientOrderID
+        else if (DukasUtil.isDefined(clientOrderID))
+        {
+            order = engine.getOrder(clientOrderID);
+
+            if (order == null)
+                throw new RuntimeException("Invalid ClientOrderID " + clientOrderID);
+
+        }
+        else
+        {
+            throw new RuntimeException("Either DukasOrderID or ClientOrderID are required");
+        }
+
+        return order;
+        
+    }
+
+    
     /**
      * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/overview-orders-and-positions
      * 
@@ -363,7 +409,8 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public IOrder submitOrder(String clientOrderID, Instrument instrument, OrderSide side, OrderType orderType, double quantity, double price, long timeout) throws Exception
+    public IOrder openPosition(String clientOrderID, Instrument instrument, boolean buy, OrderType orderType, double quantity, double price, double slippage, long timeout)
+            throws Exception
     {
         if (context == null)
             throw new RuntimeException("Strategy context not initialized yet");
@@ -371,7 +418,7 @@ public class DukasStrategy implements IStrategy
         // convert OrderSide and orderType to OrderCommand
         OrderCommand cmd = null;
 
-        if (side == OrderSide.Buy)
+        if (buy)
         {
             if (orderType == OrderType.Market)
             {
@@ -390,7 +437,7 @@ public class DukasStrategy implements IStrategy
                 throw new IllegalArgumentException("Invalid OrderType: " + orderType);
             }
         }
-        else if (side == OrderSide.Sell)
+        else 
         {
             if (orderType == OrderType.Market)
             {
@@ -409,17 +456,17 @@ public class DukasStrategy implements IStrategy
                 throw new IllegalArgumentException("Invalid OrderType: " + orderType);
             }
         }
-        else
-        {
-            throw new IllegalArgumentException("Invalid OrderSide: " + side);
-        }
 
-        double slippage = 10;
+        // Default slippage; 10 pips
+        if (slippage <= 0.0)
+            slippage = 10;
 
+        // Normalize quantity to Dukascopy quantity (in lots of 100,000)
+        double quantityNormalized = quantity / DukasConstants.lotSize;
 
         // We have to submit the order in the same thread as the Context; using Reactive Programming
         // So we submit a task; then wait for it to get done
-        NewOrderTask task = new NewOrderTask(clientOrderID, instrument, cmd, quantity / 1000000.0, price, slippage);
+        OpenPositionTask task = new OpenPositionTask(clientOrderID, instrument, cmd, quantityNormalized, price, slippage);
         context.executeTask(task);
 
         // we have to wait for a given timeout
@@ -428,6 +475,7 @@ public class DukasStrategy implements IStrategy
 
         for (int i = 0; i < iterations; i++)
         {
+            // sleep for a minimal amount at a time; so we can get the result quick when the task is done
             try
             {
                 Thread.sleep(sleepTime);
@@ -455,7 +503,7 @@ public class DukasStrategy implements IStrategy
         //  return null;
     }
 
-    public class NewOrderTask implements Callable<IOrder>
+    public class OpenPositionTask implements Callable<IOrder>
     {
         private String clientOrderID;
 
@@ -478,10 +526,10 @@ public class DukasStrategy implements IStrategy
         public Throwable error = null;
 
         public String rejectReason = null;
-        
+
         public boolean taskDone = false;
 
-        public NewOrderTask(String clientOrderID, Instrument instrument, OrderCommand cmd, double quantity, double price, double slippage)
+        public OpenPositionTask(String clientOrderID, Instrument instrument, OrderCommand cmd, double quantity, double price, double slippage)
         {
             this.clientOrderID = clientOrderID;
             this.instrument = instrument;
@@ -500,13 +548,13 @@ public class DukasStrategy implements IStrategy
                 log.info("order submitted " + order);
 
                 taskDone = true;
-                
+
                 return order;
             }
             catch (Throwable e)
             {
                 error = e;
-                
+
                 if (e.getMessage().contains("Label not unique"))
                 {
                     rejectReason = "Duplicate ClientOrderID: " + clientOrderID;
@@ -515,9 +563,9 @@ public class DukasStrategy implements IStrategy
                 {
                     rejectReason = e.getMessage();
                 }
-                
+
                 taskDone = true;
-                
+
                 e.printStackTrace();
 
                 return null;
@@ -532,85 +580,157 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public IOrder submitClosePosition(String clientOrderID,  long timeout) throws Exception
+    public IOrder closePosition(String clientOrderID, String dukasOrderID, double quantity, double price, double slippage, long timeout) throws Exception
     {
         if (context == null)
             throw new RuntimeException("Strategy context not initialized yet");
 
+        // Lookup the order
+
+        IOrder order = null;
+
+        // Give priority to DukasOrderID
+
+        if (DukasUtil.isDefined(dukasOrderID))
+        {
+            order = engine.getOrderById(dukasOrderID);
+
+            if (order == null)
+                throw new RuntimeException("Invalid DukasOrderID " + dukasOrderID);
+        }
+        // Then ClientOrderID
+        else if (DukasUtil.isDefined(clientOrderID))
+        {
+            order = engine.getOrder(clientOrderID);
+
+            if (order == null)
+                throw new RuntimeException("Invalid ClientOrderID " + clientOrderID);
+
+        }
+        else
+        {
+            throw new RuntimeException("Either DukasOrderID or ClientOrderID are required");
+        }
+
+        if (order.getState() != IOrder.State.OPENED)
+            throw new RuntimeException("Cannot close order in current state: " + order.getState());
+
+        // Default slippage; 10 pips
+        if (slippage <= 0.0)
+            slippage = 10;
+        
+        // Normalize quantity to Dukascopy quantity (in lots of 100,000)
+        double quantityNormalized = quantity / DukasConstants.lotSize;
+        
         
         // We have to submit the order in the same thread as the Context; using Reactive Programming
         // So we submit a task; then wait for it to get done
-        ClosePositionTask task = new ClosePositionTask(clientOrderID);
+        ClosePositionTask task = new ClosePositionTask(order, quantityNormalized, price, slippage);
         context.executeTask(task);
 
         // we have to wait for a given timeout
         long sleepTime = 100;
-        Thread.sleep(sleepTime);
+        int iterations = (int) (timeout / sleepTime);
 
-        if (task.taskDone)
+        for (int i = 0; i < iterations; i++)
         {
-            if (task.rejectReason != null)
+            // sleep for a minimal amount at a time; so we can get the result quick when the task is done
+            try
             {
-                throw new RuntimeException(task.rejectReason);
+                Thread.sleep(sleepTime);
             }
-            else
+            catch (InterruptedException ie)
             {
-                return task.order;
+
+            }
+
+            if (task.taskDone)
+            {
+                if (task.rejectReason != null)
+                {
+                    throw new RuntimeException(task.rejectReason);
+                }
+                else
+                {
+                    return task.order;
+                }
             }
         }
 
         return null;
     }
-    public class ClosePositionTask implements Callable<IOrder> {
 
-        private String clientOrderID;
-        public IOrder order = null;
+    public class ClosePositionTask implements Callable<IOrder>
+    {
+
+        private IOrder order;
+
+        private double quantity;
+
+        private double price;
+
+        private double slippage;
+
         public boolean taskDone = false;
+
         public Throwable error = null;
+
         public String rejectReason = null;
 
-        public ClosePositionTask(String clientOrderID)
+        public ClosePositionTask(IOrder order, double quantity, double price, double slippage)
         {
-            this.clientOrderID = clientOrderID;
+            this.order = order;
+            this.quantity = quantity;
+            this.price = price;
+            this.slippage = slippage;
         }
 
         @Override
-        public IOrder call() throws Exception {
-            
+        public IOrder call() throws Exception
+        {
+
             try
             {
-                IOrder order = engine.getOrder(clientOrderID);
-                if (order != null) {
-                    order.close();
+                if (order.getState() == IOrder.State.OPENED)
+                {
+                    if (quantity == 0.0 && price == 0.0 && slippage == 0.0)
+                    {
+                        order.close();
+                    }
+                    else if (quantity > 0.0 && price == 0.0 && slippage == 0.0)
+                    {
+                        order.close(quantity);
+                    }
+                    else if (quantity > 0.0 && price > 0.0 && slippage == 0.0)
+                    {
+                        order.close(quantity, price);
+                    }
+                    else if (quantity > 0.0 && price > 0.0 && slippage > 0.0)
+                    {
+                        order.close(quantity, price, slippage);
+                    }
                 }
-                taskDone = true;
+                else
+                {
+                    rejectReason = "Invalid order state: " + order.getState();
+                }
 
-                log.info("order closed: " + order);
-                
-                return order;
+                taskDone = true;
             }
             catch (Throwable e)
             {
                 error = e;
-                if (e.getMessage().contains("Order not found"))
-                {
-                    rejectReason = "Order not found: " + clientOrderID;
-                }
-                else
-                {
-                    rejectReason = e.getMessage();
-                }
-                
+                rejectReason = e.getMessage();
+
                 taskDone = true;
-                
+
                 e.printStackTrace();
-
-                return null;
             }
-        }
-        
-    }
 
+            return order;
+        }
+
+    }
 
     /**
      * Gets historical data
