@@ -422,8 +422,6 @@ public class DukasStrategy implements IStrategy
         NewOrderTask task = new NewOrderTask(clientOrderID, instrument, cmd, quantity / 1000000.0, price, slippage);
         context.executeTask(task);
 
-        IOrder order = null;
-
         // we have to wait for a given timeout
         long sleepTime = 100;
         int iterations = (int) (timeout / sleepTime);
@@ -526,6 +524,93 @@ public class DukasStrategy implements IStrategy
             }
         }
     }
+
+    /**
+     * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/close-orders
+     * 
+     * @param clientOrderID
+     * @return
+     * @throws Exception
+     */
+    public IOrder submitClosePosition(String clientOrderID,  long timeout) throws Exception
+    {
+        if (context == null)
+            throw new RuntimeException("Strategy context not initialized yet");
+
+        
+        // We have to submit the order in the same thread as the Context; using Reactive Programming
+        // So we submit a task; then wait for it to get done
+        ClosePositionTask task = new ClosePositionTask(clientOrderID);
+        context.executeTask(task);
+
+        // we have to wait for a given timeout
+        long sleepTime = 100;
+        Thread.sleep(sleepTime);
+
+        if (task.taskDone)
+        {
+            if (task.rejectReason != null)
+            {
+                throw new RuntimeException(task.rejectReason);
+            }
+            else
+            {
+                return task.order;
+            }
+        }
+
+        return null;
+    }
+    public class ClosePositionTask implements Callable<IOrder> {
+
+        private String clientOrderID;
+        public IOrder order = null;
+        public boolean taskDone = false;
+        public Throwable error = null;
+        public String rejectReason = null;
+
+        public ClosePositionTask(String clientOrderID)
+        {
+            this.clientOrderID = clientOrderID;
+        }
+
+        @Override
+        public IOrder call() throws Exception {
+            
+            try
+            {
+                IOrder order = engine.getOrder(clientOrderID);
+                if (order != null) {
+                    order.close();
+                }
+                taskDone = true;
+
+                log.info("order closed: " + order);
+                
+                return order;
+            }
+            catch (Throwable e)
+            {
+                error = e;
+                if (e.getMessage().contains("Order not found"))
+                {
+                    rejectReason = "Order not found: " + clientOrderID;
+                }
+                else
+                {
+                    rejectReason = e.getMessage();
+                }
+                
+                taskDone = true;
+                
+                e.printStackTrace();
+
+                return null;
+            }
+        }
+        
+    }
+
 
     /**
      * Gets historical data
