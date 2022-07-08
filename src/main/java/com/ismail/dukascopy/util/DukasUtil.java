@@ -22,8 +22,7 @@ import com.ismail.dukascopy.model.ApiException;
  * @author ismail
  * @since 20220603
  */
-public class DukasUtil
-{
+public class DukasUtil {
     public static final long SECOND = 1000L;
 
     public static final long MINUTE = 60 * SECOND;
@@ -44,8 +43,7 @@ public class DukasUtil
      * @param pInputString input string
      * @return html format
      */
-    public static String toHtmlFormat(String pInputString)
-    {
+    public static String toHtmlFormat(String pInputString) {
         if (pInputString == null || pInputString.length() == 0)
             return "";
 
@@ -71,8 +69,7 @@ public class DukasUtil
      * @param pVal
      * @return
      */
-    public final static boolean isDefined(final String pVal)
-    {
+    public final static boolean isDefined(final String pVal) {
         return (pVal != null && pVal.length() > 0);
     }
 
@@ -80,8 +77,7 @@ public class DukasUtil
     // Web / Servlet utilities
     // --------------------------------------------------------------------------------------------------
 
-    public static String getParameter(HttpServletRequest request, String pParamName)
-    {
+    public static String getParameter(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null)
@@ -90,8 +86,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static String getParameter(HttpServletRequest request, String pParamName, String pDefaultValue)
-    {
+    public static String getParameter(HttpServletRequest request, String pParamName, String pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null)
@@ -100,8 +95,7 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-    public static char getParameterAsChar(HttpServletRequest request, String pParamName)
-    {
+    public static char getParameterAsChar(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -110,8 +104,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static char getParameterAsChar(HttpServletRequest request, String pParamName, char pDefaultValue)
-    {
+    public static char getParameterAsChar(HttpServletRequest request, String pParamName, char pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -120,8 +113,7 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-    public static double getParameterAsDouble(HttpServletRequest request, String pParamName)
-    {
+    public static double getParameterAsDouble(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -130,8 +122,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static double getParameterAsDouble(HttpServletRequest request, String pParamName, double pDefaultValue)
-    {
+    public static double getParameterAsDouble(HttpServletRequest request, String pParamName, double pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -140,8 +131,7 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-    public static int getParameterAsInt(HttpServletRequest request, String pParamName)
-    {
+    public static int getParameterAsInt(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -150,8 +140,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static int getParameterAsInt(HttpServletRequest request, String pParamName, int pDefaultValue)
-    {
+    public static int getParameterAsInt(HttpServletRequest request, String pParamName, int pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -160,8 +149,7 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-    public static long getParameterAsLong(HttpServletRequest request, String pParamName)
-    {
+    public static long getParameterAsLong(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -170,8 +158,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static long getParameterAsLong(HttpServletRequest request, String pParamName, long pDefaultValue)
-    {
+    public static long getParameterAsLong(HttpServletRequest request, String pParamName, long pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -180,8 +167,7 @@ public class DukasUtil
             return pDefaultValue;
     }
 
-    public static boolean getParameterAsBoolean(HttpServletRequest request, String pParamName)
-    {
+    public static boolean getParameterAsBoolean(HttpServletRequest request, String pParamName) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -190,8 +176,7 @@ public class DukasUtil
             throw new ApiException("Required parameter missing: " + pParamName);
     }
 
-    public static boolean getParameterAsBoolean(HttpServletRequest request, String pParamName, boolean pDefaultValue)
-    {
+    public static boolean getParameterAsBoolean(HttpServletRequest request, String pParamName, boolean pDefaultValue) {
         String str = request.getParameter(pParamName);
 
         if (str != null && str.length() > 0)
@@ -204,18 +189,15 @@ public class DukasUtil
     // Formatting utilities
     // --------------------------------------------------------------------------------------------------
 
-    public static String get(UpgradeRequest request, String pParamName, String pDefaultValue)
-    {
+    public static String get(UpgradeRequest request, String pParamName, String pDefaultValue) {
         String val = pDefaultValue;
 
         Map<String, List<String>> paramMap = request.getParameterMap();
 
-        if (paramMap != null)
-        {
+        if (paramMap != null) {
             List<String> valList = paramMap.get(pParamName);
 
-            if (valList != null)
-            {
+            if (valList != null) {
                 val = valList.get(0);
             }
         }
@@ -223,8 +205,7 @@ public class DukasUtil
         return val;
     }
 
-    public static String get(UpgradeRequest request, String pParamName)
-    {
+    public static String get(UpgradeRequest request, String pParamName) {
         String val = get(request, pParamName, null);
 
         if (val != null)
@@ -233,13 +214,13 @@ public class DukasUtil
             throw new IllegalArgumentException("Mandatory parameter is missing: " + pParamName);
     }
 
-    public static boolean getb(UpgradeRequest request, String pParamName)
-    {
+    public static boolean getb(UpgradeRequest request, String pParamName) {
         String str = get(request, pParamName);
 
         boolean val = false;
 
-        // Since we are using checkboxes for booleans; when the box is unchecked; it is not passed; so null really means false
+        // Since we are using checkboxes for booleans; when the box is unchecked; it is
+        // not passed; so null really means false
         if (DukasUtil.isDefined(str))
             val = "T".equalsIgnoreCase(str) || "true".equalsIgnoreCase(str) || "y".equalsIgnoreCase(str);
         else
@@ -254,30 +235,26 @@ public class DukasUtil
      * @param pDefaultValue
      * @return
      */
-    public static boolean getb(UpgradeRequest request, String pParamName, boolean pDefaultValue)
-    {
+    public static boolean getb(UpgradeRequest request, String pParamName, boolean pDefaultValue) {
         String str = get(request, pParamName, null);
 
         boolean val = pDefaultValue;
 
-        // Since we are using checkboxes for booleans; when the box is unchecked; it is not passed; so null really means false
+        // Since we are using checkboxes for booleans; when the box is unchecked; it is
+        // not passed; so null really means false
         if (DukasUtil.isDefined(str))
             val = "T".equalsIgnoreCase(str) || "true".equalsIgnoreCase(str) || "y".equalsIgnoreCase(str);
 
         return val;
     }
 
-    public static String getRemoteAddress(SocketAddress socketAddr)
-    {
+    public static String getRemoteAddress(SocketAddress socketAddr) {
         String addr = null;
 
-        if (socketAddr instanceof InetSocketAddress)
-        {
+        if (socketAddr instanceof InetSocketAddress) {
             InetSocketAddress isocket = (InetSocketAddress) socketAddr;
             addr = isocket.getAddress().getHostAddress();
-        }
-        else
-        {
+        } else {
             addr = socketAddr.toString();
             if (addr.startsWith("/"))
                 addr = addr.substring(1);
@@ -294,17 +271,13 @@ public class DukasUtil
     // Formatting utilities
     // --------------------------------------------------------------------------------------------------
 
-    public static final String numericFormat(double value, int decimals)
-    {
+    public static final String numericFormat(double value, int decimals) {
         NumberFormat formatter = null;
 
-        if (decimals <= 0)
-        {
+        if (decimals <= 0) {
             formatter = new DecimalFormat("#0");
 
-        }
-        else
-        {
+        } else {
             StringBuilder sb = new StringBuilder("#0.");
             for (int i = 0; i < decimals; i++)
                 sb.append('0');
@@ -315,23 +288,19 @@ public class DukasUtil
         return formatter.format(value);
     }
 
-    public static SimpleDateFormat getFormatter(String pFormat)
-    {
+    public static SimpleDateFormat getFormatter(String pFormat) {
         return getFormatter(pFormat, null, false);
     }
 
-    public static SimpleDateFormat getFormatter(String pFormat, String pTimeZoneID)
-    {
+    public static SimpleDateFormat getFormatter(String pFormat, String pTimeZoneID) {
         return getFormatter(pFormat, pTimeZoneID, false);
     }
 
-    public static SimpleDateFormat getFormatter(String pFormat, String pTimeZoneID, boolean pLenient)
-    {
+    public static SimpleDateFormat getFormatter(String pFormat, String pTimeZoneID, boolean pLenient) {
         SimpleDateFormat dateParser = new SimpleDateFormat(pFormat);
         dateParser.setLenient(pLenient);
 
-        if (pTimeZoneID != null)
-        {
+        if (pTimeZoneID != null) {
             TimeZone tz = TimeZone.getTimeZone(pTimeZoneID);
             dateParser.setTimeZone(tz);
         }
@@ -339,8 +308,7 @@ public class DukasUtil
         return dateParser;
     }
 
-    public static String getOrderAge(long pMillis)
-    {
+    public static String getOrderAge(long pMillis) {
         String age = null;
 
         if (pMillis > DAY)
@@ -356,13 +324,13 @@ public class DukasUtil
     }
 
     /**
-     * Returns the time elapsed; but round it by days (i.e. don't show hours, minutes, seconds..etc)
+     * Returns the time elapsed; but round it by days (i.e. don't show hours,
+     * minutes, seconds..etc)
      * 
      * @param pMillis
      * @return
      */
-    public static String getOrderAgeInSeconds(long pMillis)
-    {
+    public static String getOrderAgeInSeconds(long pMillis) {
         if (pMillis <= 0L)
             return "";
 
@@ -372,13 +340,13 @@ public class DukasUtil
     }
 
     /**
-     * Returns the time elapsed; but round it by days (i.e. don't show hours, minutes, seconds..etc)
+     * Returns the time elapsed; but round it by days (i.e. don't show hours,
+     * minutes, seconds..etc)
      * 
      * @param pMillis
      * @return
      */
-    public static String getOrderAgeInMinutes(long pMillis)
-    {
+    public static String getOrderAgeInMinutes(long pMillis) {
         if (pMillis <= 0L)
             return "";
 
@@ -388,13 +356,13 @@ public class DukasUtil
     }
 
     /**
-     * Returns the time elapsed; but round it by days (i.e. don't show hours, minutes, seconds..etc)
+     * Returns the time elapsed; but round it by days (i.e. don't show hours,
+     * minutes, seconds..etc)
      * 
      * @param pMillis
      * @return
      */
-    public static String getOrderAgeInHours(long pMillis)
-    {
+    public static String getOrderAgeInHours(long pMillis) {
         if (pMillis <= 0L)
             return "";
 
@@ -404,15 +372,15 @@ public class DukasUtil
     }
 
     /**
-     * convert millis to a amount in years / months / days / hours / minutes / seconds
+     * convert millis to a amount in years / months / days / hours / minutes /
+     * seconds
      * 
      * and displays the time in a shorter version; depending on the duration
      * 
      * @param pMillis
      * @return
      */
-    public static String getOrderAgeInMillis(long pMillis)
-    {
+    public static String getOrderAgeInMillis(long pMillis) {
         int sign = pMillis >= 0 ? 1 : -1;
 
         long millis = pMillis;
@@ -454,8 +422,7 @@ public class DukasUtil
         if (sign < 0)
             sb.append('-');
 
-        if (years > 0)
-        {
+        if (years > 0) {
             sb.append(years + "y ");
 
             if (months > 0)
@@ -463,9 +430,7 @@ public class DukasUtil
 
             if (days > 0)
                 sb.append(days + "d ");
-        }
-        else if (months > 0)
-        {
+        } else if (months > 0) {
             sb.append(months + "mon ");
 
             if (days > 0)
@@ -476,9 +441,7 @@ public class DukasUtil
 
             if (minutes > 0)
                 sb.append(minutes + "m ");
-        }
-        else
-        {
+        } else {
             if (days > 0)
                 sb.append(days + "d ");
 
@@ -503,35 +466,29 @@ public class DukasUtil
      * format),
      * 
      * @param pInputString input string
-     * @param pDelimiter delimier
+     * @param pDelimiter   delimier
      * @return array list
      */
-    public static List<String> splitToArrayList(String pInputString, char pDelimiter)
-    {
+    public static List<String> splitToArrayList(String pInputString, char pDelimiter) {
         List<String> oList = new ArrayList<>();
 
         // split string based on charachers
         StringBuilder sb = new StringBuilder(pInputString);
         StringBuilder sbThisRow = new StringBuilder("");
 
-        //String str = new String(pInputString);
+        // String str = new String(pInputString);
 
         // if the string is empty, then retun an empty array list
-        if (pInputString.length() > 0)
-        {
+        if (pInputString.length() > 0) {
             char c;
 
-            for (int i = 0; i < sb.length(); i++)
-            {
+            for (int i = 0; i < sb.length(); i++) {
                 c = sb.charAt(i);
 
-                if (c == pDelimiter)
-                {
+                if (c == pDelimiter) {
                     oList.add((sbThisRow.toString()).trim());
                     sbThisRow.setLength(0);
-                }
-                else
-                {
+                } else {
                     sbThisRow.append(c);
                 }
             }
