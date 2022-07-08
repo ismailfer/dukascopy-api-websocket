@@ -1,9 +1,6 @@
 # dukascopy-api-websocket
 
-
 ![plot](./docs/dukascopy-api-architecture.png)
-
-
 
 **dukas-api** is a standalone server application for providing REST/WebSocket access to [Dukascopy][dukascopy-home]'s JForex trading platform.
 
@@ -11,40 +8,41 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 
 **dukas-api** server leverages this official SDK and provides REST/WebSocket access for the SDK.
 
-* REST interface for simple request/response communication.
-* Websocket interface for real-time top of book, and full order book feed
-* Automatic connection management with JForex platform. (cf: connect, throttled-reconnect, instrument subscription, ...)
-* Top of book data feed
-* Order book (10 levels) data feed
-* Account feed
-* Candle data feed
-* Restful requests for instrument data, account data, candle data, order book data, top of book data
-* Pure Java application, requiring no additional installations other than the Java Runtime Environment.
-* Spring Boot framework
-* Jetty native Websocket api
-* Placing of orders to JForex 
+-   REST interface for simple request/response communication.
+-   Websocket interface for real-time top of book, and full order book feed
+-   Automatic connection management with JForex platform. (cf: connect, throttled-reconnect, instrument subscription, ...)
+-   Top of book data feed
+-   Order book (10 levels) data feed
+-   Account feed
+-   Candle data feed
+-   Restful requests for instrument data, account data, candle data, order book data, top of book data
+-   Pure Java application, requiring no additional installations other than the Java Runtime Environment.
+-   Spring Boot framework
+-   Jetty native Websocket api
+-   Placing of orders to JForex
 
 **dukas-api-websocket** project was inspired by **[dukas-proxy](https://github.com/after-the-sunrise/dukas-proxy)** project that uses Websocket Stomp.
 
 ## Potential uses of Dukascopy-api
-* User interface application (web, android, mobile, etc)
 
-* Custom Automated Strategy trader in java or any language that supports Rest API / Websockets
+-   User interface application (web, android, mobile, etc)
 
-* [Execution Algos Microservices](https://github.com/ismailfer/spring-boot-crypto-execution-algo-client) uses this project to execute trades on Forex Market
+-   Custom Automated Strategy trader in java or any language that supports Rest API / Websockets
 
+-   [Execution Algos Microservices](https://github.com/ismailfer/spring-boot-crypto-execution-algo-client) uses this project to execute trades on Forex Market
 
 ## Technology Stack
-- Maven project; uses central maven repository; as well as Dukascopy maven repository
-- Spring Boot
-- Rest API
-- Websockets
-- Jackson Json serialization/deserialization
-- In-memory queues
-- Multi-threading environment
-- Fault recovery
-- Docker
-- Kubernetes
+
+-   Maven project; uses central maven repository; as well as Dukascopy maven repository
+-   Spring Boot
+-   Rest API
+-   Websockets
+-   Jackson Json serialization/deserialization
+-   In-memory queues
+-   Multi-threading environment
+-   Fault recovery
+-   Docker
+-   Kubernetes
 
 ## Getting Started
 
@@ -53,7 +51,6 @@ The official [JForex SDK][dukascopy-wiki] allows the user to use JForex API by p
 You can use either a demo account or a real account to connect.
 
 You will need the username and password in order to connect to Dukascopy servers.
-
 
 ### Installation
 
@@ -65,26 +62,30 @@ Standard Spring Boot application.properties file
 
 You can configure various properties:
 
-- Dukascopy server (demo or real)
-- `username` (demo or real)
-- `password` (demo or real)
+-   Dukascopy server (demo or real)
+-   `username` (demo or real)
+-   `password` (demo or real)
 
-- Websocket port number
-- Instrument list to pre-subscribe to.
-
+-   Websocket port number
+-   Instrument list to pre-subscribe to.
 
 Due to a limitation in spring boot framework with running native websockets (instead of websocket stomp/sockjs);
 the application will be running on two ports:
-- 7080 runs RestAPI (using spring boot rest controller)
-- 7081 runs standard Websocket API (using Jetty native websocket)
 
+-   7080 runs RestAPI (using spring boot rest controller)
+-   7081 runs standard Websocket API (using Jetty native websocket)
 
 ### RestAPI
 
 #### Get Historical Data
 
 To get historical bar data:
-* GET `http://localhost:7080/histdata?instID=EURUSD&period=60&timeFrom=0&timeTo=0`
+
+-   GET `http://localhost:7080/api/v1/history?instID=EURUSD&timeFrame=15MIN&timeFrom=0&timeTo=0`
+
+Params:
+
+timeFrame: 1SEC | 10SEC | 1MIN | 5MIN | 10MIN | 15MIN | 1HOUR | DAILY
 
 ```json
 [
@@ -114,20 +115,28 @@ To get historical bar data:
 ]
 ```
 
+#### Get Position
 
-#### Submit Orders
+-   GET `http://localhost:7080/api/v1/position?clientOrderID=ORD_1004`
 
-To place a market order; issue a Post request; with the following parameters:
-- instID
-- clientOrderID
-- side
-- orderType
-- quantity
-- price
+Params:
+`clientOrderId` or `dukasOrderID`
 
-##### Market Order Example
+#### Open Position
 
-* POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1003&side=Buy&orderType=Market&quantity=100000.0&price=0.0`
+To place a market order; issue a POST request; with the following parameters:
+
+-   instID
+-   clientOrderID
+-   orderSide
+-   orderType
+-   quantity
+-   price (optional)
+-   slippage (optional)
+
+##### Market Position Example
+
+-   POST `http://localhost:7080/api/v1/position?clientOrderID=ORD_1004&instID=AUDJPY&orderSide=Buy&orderType=Market&quantity=10000.0`
 
 Order Response for successful placement:
 
@@ -157,7 +166,7 @@ Order response for a rejected order:
 
 ##### Limit Order Example
 
-* POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1005&side=Buy&orderType=Limit&quantity=100000.0&price=1.03`
+-   POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1005&side=Buy&orderType=Limit&quantity=100000.0&price=1.03`
 
 Order Response for successful placement:
 
@@ -185,6 +194,12 @@ Order response for a rejected order:
 }
 ```
 
+##### Close Position
+
+-   DELETE `http://localhost:7080/order?clientOrderID=ORD_1005`
+
+Params:
+`clientOrderId` or `dukasOrderID`
 
 ### WebSocket
 
@@ -192,23 +207,24 @@ WebSocket streaming interface can be accessed via standard websocket client
 
 You can either subscribe to topOfBook; or to the full order book:
 
-
 To subscribe to Top of Book with the configured list of instruments:
-* CONNECT : `ws://localhost:7081/ticker?topOfBook=true`
+
+-   CONNECT : `ws://localhost:7081/ticker?topOfBook=true`
 
 To subscribe to Top of Book; with custom list of instruments
-* CONNECT : `ws://localhost:7081/ticker?topOfBook=true&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
+
+-   CONNECT : `ws://localhost:7081/ticker?topOfBook=true&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
 
 To subscribe to Order Book (10 levels) with the configured list of instruments:
-* CONNECT : `ws://localhost:7081/ticker?topOfBook=false`
+
+-   CONNECT : `ws://localhost:7081/ticker?topOfBook=false`
 
 To subscribe to Order Book; with custom list of instruments
-* CONNECT : `ws://localhost:7081/ticker?topOfBook=false&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
 
+-   CONNECT : `ws://localhost:7081/ticker?topOfBook=false&instIDs=EURUSD,EURJPY,USDJPY,AUDUSD`
 
+Top Of Book Payload is a JSON object (`application/json`)
 
-Top Of Book Payload is a JSON object (`application/json`)  
- 
 ```json
 {
     "symbol": "USD/JPY",
@@ -226,9 +242,8 @@ Top Of Book Payload is a JSON object (`application/json`)
 }
 ```
 
+Order Book Payload is a JSON object (`application/json`)
 
-Order Book Payload is a JSON object (`application/json`)  
- 
 ```json
 {
     "symbol": "USD/JPY",
@@ -330,9 +345,7 @@ Order Book Payload is a JSON object (`application/json`)
 }
 ```
 
-
 To unsubscribe; just close the connection.
-
 
 ## Building from Source
 
@@ -345,7 +358,7 @@ $JAVA_HOME/bin/java -version
 
 git clone git@github.com:ismailfer/dukas-api-websocket.git
 
-cd dukas-api-websocket 
+cd dukas-api-websocket
 
 mvn clean package
 
@@ -386,8 +399,3 @@ To build a docker image:
 docker build --tag dukascopy-api:1.0 .
 
 ```
-
-
-
-
-

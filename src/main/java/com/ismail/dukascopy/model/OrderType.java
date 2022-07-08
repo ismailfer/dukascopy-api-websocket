@@ -2,12 +2,10 @@ package com.ismail.dukascopy.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import lombok.Getter;
 
 @Getter
-public enum OrderType
-{
+public enum OrderType {
     Market('1'), //
     Limit('2'), //
     Stop('3'), //
@@ -15,19 +13,17 @@ public enum OrderType
 
     private final char code;
 
-    OrderType(char code)
-    {
+    OrderType(char code) {
         this.code = code;
     }
-    
-    public static List<OrderType> getAllValues()
-    {
+
+    public static List<OrderType> getAllValues() {
         ArrayList<OrderType> list = new ArrayList<>();
         list.add(Market);
         list.add(Limit);
         list.add(Stop);
         list.add(Stop_Limit);
-        
+
         return list;
     }
 }

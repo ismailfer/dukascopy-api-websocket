@@ -18,8 +18,7 @@ import lombok.ToString;
 @Data
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiError
-{
+public class ApiError {
     /**
      * Error code.
      */

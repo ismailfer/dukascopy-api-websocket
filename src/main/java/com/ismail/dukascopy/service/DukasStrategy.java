@@ -1,23 +1,5 @@
 package com.ismail.dukascopy.service;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IConnectionStatusMessage;
@@ -43,19 +25,35 @@ import com.ismail.dukascopy.model.OrderSide;
 import com.ismail.dukascopy.model.OrderType;
 import com.ismail.dukascopy.model.TopOfBook;
 import com.ismail.dukascopy.util.DukasUtil;
-
+import java.time.Clock;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Dukascopy Strategy implementation that sends data to websocket clients
- * 
+ *
  * @author ismail
  * @since 20220617
  */
 @Service
 @Slf4j
-public class DukasStrategy implements IStrategy
-{
+public class DukasStrategy implements IStrategy {
 
     private final DukasConfig config;
 
@@ -87,121 +85,102 @@ public class DukasStrategy implements IStrategy
     private HashMap<String, IOrder> orderByClientOrderIDMap = new HashMap<>();
 
     @Autowired
-    public DukasStrategy(Clock clock, DukasConfig config)
-    {
-
+    public DukasStrategy(Clock clock, DukasConfig config) {
         this.config = Objects.requireNonNull(config, "Configuration is required.");
-
-        // this.template = Objects.requireNonNull(template, "SimpMessageSendingOperations is required.");
+        // this.template = Objects.requireNonNull(template,
+        // "SimpMessageSendingOperations is required.");
 
     }
 
     @Override
-    public void onStart(IContext context)
-    {
+    public void onStart(IContext context) {
         reference.set(context);
         this.context = context;
         engine = context.getEngine();
 
-        log.info("onStart() server time = {}", Instant.ofEpochMilli(context.getTime()));
+        log.info(
+                "onStart() server time = {}",
+                Instant.ofEpochMilli(context.getTime()));
 
-        // DukasSubscription subscription = adjustSubscription(null, persistInstruments(null, null));
+        // DukasSubscription subscription = adjustSubscription(null,
+        // persistInstruments(null, null));
 
-        //template.convertAndSend(TOPIC_SUBSCRIPTION, subscription);
+        // template.convertAndSend(TOPIC_SUBSCRIPTION, subscription);
 
         // Pre-subscribe to configured instrument list
-        List<String> instrumentIDList = DukasUtil.splitToArrayList(config.getSubscriptionInstruments(), ',');
+        List<String> instrumentIDList = DukasUtil.splitToArrayList(
+                config.getSubscriptionInstruments(),
+                ',');
 
         Set<Instrument> instruments = new TreeSet<>();
 
-        for (String instrumentID : instrumentIDList)
-        {
+        for (String instrumentID : instrumentIDList) {
             Instrument instrument = Instrument.valueOf(instrumentID);
 
-            if (instrument != null)
-            {
+            if (instrument != null) {
                 instruments.add(instrument);
-            }
-            else
-            {
+            } else {
                 log.warn("Invalid instrument: " + instrumentID);
             }
         }
 
         dukasSubscription = adjustSubscription("pre-defined-subscriptions", instruments);
 
-        try
-        {
+        try {
             // Instrument eurusd = Instrument.EURUSD;
-            // IOrder order = submitOrder("ORDER_" + System.currentTimeMillis(), eurusd, OrderSide.Buy, OrderType.Market, 100000.0, 0.0);
+            // IOrder order = submitOrder("ORDER_" + System.currentTimeMillis(), eurusd,
+            // OrderSide.Buy, OrderType.Market, 100000.0, 0.0);
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         // TODO get list of orders for my strategy
-        try
-        {
+        try {
             List<IOrder> myOrderList = engine.getOrders();
 
-            if (myOrderList != null)
-            {
-                for (IOrder order : myOrderList)
-                {
+            if (myOrderList != null) {
+                for (IOrder order : myOrderList) {
                     orderList.add(order);
                     orderByClientOrderIDMap.put(order.getLabel(), order);
                     orderByIDMap.put(order.getId(), order);
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
-    public void onStop()
-    {
-
+    public void onStop() {
         IContext context = reference.getAndSet(null);
 
-        if (context == null)
-        {
+        if (context == null) {
             return;
         }
 
-        log.info("Context stopped : server time = {}", Instant.ofEpochMilli(context.getTime()));
-
+        log.info(
+                "Context stopped : server time = {}",
+                Instant.ofEpochMilli(context.getTime()));
     }
 
     @Override
-    public void onMessage(IMessage message)
-    {
-
-        if (message instanceof IConnectionStatusMessage)
-        {
+    public void onMessage(IMessage message) {
+        if (message instanceof IConnectionStatusMessage) {
             IConnectionStatusMessage m = (IConnectionStatusMessage) message;
         }
 
-        if (message instanceof IInstrumentStatusMessage)
-        {
+        if (message instanceof IInstrumentStatusMessage) {
             IInstrumentStatusMessage m = (IInstrumentStatusMessage) message;
-
         }
-
         // log.info("onMessage() " + message);
 
-        //  template.convertAndSend(TOPIC_MESSAGE, map);
+        // template.convertAndSend(TOPIC_MESSAGE, map);
 
     }
 
     @Override
-    public void onAccount(IAccount account)
-    {
+    public void onAccount(IAccount account) {
         // log.info("onAccount() " + account);
 
         // Map<String, Object> map = convertAccount(account);
@@ -213,15 +192,13 @@ public class DukasStrategy implements IStrategy
     }
 
     @Override
-    public void onTick(Instrument instrument, ITick tick)
-    {
+    public void onTick(Instrument instrument, ITick tick) {
         // log.info("onTick << " + instrument.getName() + ": " + tick.toString());
 
         // --------------------------------------------------------------------------------------
         // Send TOB
         // --------------------------------------------------------------------------------------
-        if (tobSubscribersSize > 0)
-        {
+        if (tobSubscribersSize > 0) {
             TopOfBook st = new TopOfBook();
             st.symbol = instrument.getName().replace("/", "").replace(".", "");
             st.bid = tick.getBid();
@@ -229,13 +206,14 @@ public class DukasStrategy implements IStrategy
             st.askQty = tick.getAskVolume();
             st.bidQty = tick.getBidVolume();
 
-            if (instrument.getType() == Type.FOREX)
-            {
+            if (instrument.getType() == Type.FOREX) {
                 st.bidQty *= 100000.0;
                 st.askQty *= 100000.0;
             }
 
-            int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
+            int depthLevels = (tick.getBids() == null || tick.getAsks() == null)
+                    ? 0
+                    : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
 
@@ -248,25 +226,18 @@ public class DukasStrategy implements IStrategy
 
             st.live = true;
 
-            try
-            {
+            try {
                 String json = jsonMapper.writeValueAsString(st);
 
                 lock.lock();
-                try
-                {
-                    for (DukasSubscriber ws : tobSubscribers)
-                    {
+                try {
+                    for (DukasSubscriber ws : tobSubscribers) {
                         ws.sendMessage(json);
                     }
-                }
-                finally
-                {
+                } finally {
                     lock.unlock();
                 }
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 log.error("onTick() error: " + e.getMessage(), e);
             }
         }
@@ -274,8 +245,7 @@ public class DukasStrategy implements IStrategy
         // --------------------------------------------------------------------------------------
         // Send OrderBook
         // --------------------------------------------------------------------------------------
-        if (orderBookSubscribersSize > 0)
-        {
+        if (orderBookSubscribersSize > 0) {
             OrderBook st = new OrderBook();
             st.symbol = instrument.getName().replace("/", "").replace(".", "");
             st.bid = tick.getBid();
@@ -283,13 +253,14 @@ public class DukasStrategy implements IStrategy
             st.ask = tick.getAsk();
             st.askQty = tick.getAskVolume();
 
-            if (instrument.getType() == Type.FOREX)
-            {
+            if (instrument.getType() == Type.FOREX) {
                 st.bidQty *= 100000.0;
                 st.askQty *= 100000.0;
             }
 
-            int depthLevels = (tick.getBids() == null || tick.getAsks() == null) ? 0 : Math.min(tick.getBids().length, tick.getAsks().length);
+            int depthLevels = (tick.getBids() == null || tick.getAsks() == null)
+                    ? 0
+                    : Math.min(tick.getBids().length, tick.getAsks().length);
 
             st.depthLevels = depthLevels;
 
@@ -302,57 +273,53 @@ public class DukasStrategy implements IStrategy
 
             st.live = true;
 
-            if (depthLevels > 0)
-            {
+            if (depthLevels > 0) {
                 st.bids = new ArrayList<>();
                 st.asks = new ArrayList<>();
 
-                for (int i = 0; i < depthLevels; i++)
-                {
-                    OrderBookEntry bidEntry = new OrderBookEntry(tick.getBidVolumes()[i], tick.getBids()[i]);
+                for (int i = 0; i < depthLevels; i++) {
+                    OrderBookEntry bidEntry = new OrderBookEntry(
+                            tick.getBidVolumes()[i],
+                            tick.getBids()[i]);
                     st.bids.add(bidEntry);
 
-                    OrderBookEntry askEntry = new OrderBookEntry(tick.getAskVolumes()[i], tick.getAsks()[i]);
+                    OrderBookEntry askEntry = new OrderBookEntry(
+                            tick.getAskVolumes()[i],
+                            tick.getAsks()[i]);
                     st.asks.add(askEntry);
 
-                    if (instrument.getType() == Type.FOREX)
-                    {
+                    if (instrument.getType() == Type.FOREX) {
                         bidEntry.quantity *= 100000.0;
                         askEntry.quantity *= 100000.0;
                     }
                 }
             }
 
-            try
-            {
+            try {
                 String json = jsonMapper.writeValueAsString(st);
 
                 lock.lock();
-                try
-                {
-                    for (DukasSubscriber ws : orderBookSubscribers)
-                    {
+                try {
+                    for (DukasSubscriber ws : orderBookSubscribers) {
                         ws.sendMessage(json);
                     }
-                }
-                finally
-                {
+                } finally {
                     lock.unlock();
                 }
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 log.error("onTick() error: " + e.getMessage(), e);
             }
         }
     }
 
     @Override
-    public void onBar(Instrument instrument, Period period, IBar askBar, IBar bidBar)
-    {
+    public void onBar(
+            Instrument instrument,
+            Period period,
+            IBar askBar,
+            IBar bidBar) {
         log.trace("onBar() " + instrument.getName() + ": " + askBar);
     }
-
 
     /**
      * @param clientOrderID
@@ -360,10 +327,11 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public IOrder getPosition(String clientOrderID, String dukasOrderID) throws Exception
-    {
+    public IOrder getPosition(String clientOrderID, String dukasOrderID)
+            throws Exception {
         if (context == null)
-            throw new RuntimeException("Strategy context not initialized yet");
+            throw new RuntimeException(
+                    "Strategy context not initialized yet");
 
         // Lookup the order
 
@@ -371,35 +339,31 @@ public class DukasStrategy implements IStrategy
 
         // Give priority to DukasOrderID
 
-        if (DukasUtil.isDefined(dukasOrderID))
-        {
+        if (DukasUtil.isDefined(dukasOrderID)) {
             order = engine.getOrderById(dukasOrderID);
 
             if (order == null)
-                throw new RuntimeException("Invalid DukasOrderID " + dukasOrderID);
+                throw new RuntimeException(
+                        "Invalid DukasOrderID " + dukasOrderID);
         }
         // Then ClientOrderID
-        else if (DukasUtil.isDefined(clientOrderID))
-        {
+        else if (DukasUtil.isDefined(clientOrderID)) {
             order = engine.getOrder(clientOrderID);
 
             if (order == null)
-                throw new RuntimeException("Invalid ClientOrderID " + clientOrderID);
-
-        }
-        else
-        {
-            throw new RuntimeException("Either DukasOrderID or ClientOrderID are required");
+                throw new RuntimeException(
+                        "Invalid ClientOrderID " + clientOrderID);
+        } else {
+            throw new RuntimeException(
+                    "Either DukasOrderID or ClientOrderID are required");
         }
 
         return order;
-        
     }
 
-    
     /**
      * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/overview-orders-and-positions
-     * 
+     *
      * @param clientOrderID
      * @param instrument
      * @param side
@@ -409,50 +373,41 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public IOrder openPosition(String clientOrderID, Instrument instrument, boolean buy, OrderType orderType, double quantity, double price, double slippage, long timeout)
-            throws Exception
-    {
+    public IOrder openPosition(
+            String clientOrderID,
+            Instrument instrument,
+            OrderSide orderSide,
+            OrderType orderType,
+            double quantity,
+            double price,
+            double slippage,
+            long timeout)
+            throws Exception {
         if (context == null)
-            throw new RuntimeException("Strategy context not initialized yet");
+            throw new RuntimeException(
+                    "Strategy context not initialized yet");
 
         // convert OrderSide and orderType to OrderCommand
         OrderCommand cmd = null;
 
-        if (buy)
-        {
-            if (orderType == OrderType.Market)
-            {
+        if (orderSide == OrderSide.Buy) {
+            if (orderType == OrderType.Market) {
                 cmd = OrderCommand.BUY;
-            }
-            else if (orderType == OrderType.Limit)
-            {
+            } else if (orderType == OrderType.Limit) {
                 cmd = OrderCommand.BUY;
-            }
-            else if (orderType == OrderType.Stop)
-            {
+            } else if (orderType == OrderType.Stop) {
                 cmd = OrderCommand.BUYSTOP;
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException("Invalid OrderType: " + orderType);
             }
-        }
-        else 
-        {
-            if (orderType == OrderType.Market)
-            {
+        } else {
+            if (orderType == OrderType.Market) {
                 cmd = OrderCommand.SELL;
-            }
-            else if (orderType == OrderType.Limit)
-            {
+            } else if (orderType == OrderType.Limit) {
                 cmd = OrderCommand.SELL;
-            }
-            else if (orderType == OrderType.Stop)
-            {
+            } else if (orderType == OrderType.Stop) {
                 cmd = OrderCommand.SELLSTOP;
-            }
-            else
-            {
+            } else {
                 throw new IllegalArgumentException("Invalid OrderType: " + orderType);
             }
         }
@@ -464,47 +419,45 @@ public class DukasStrategy implements IStrategy
         // Normalize quantity to Dukascopy quantity (in lots of 100,000)
         double quantityNormalized = quantity / DukasConstants.lotSize;
 
-        // We have to submit the order in the same thread as the Context; using Reactive Programming
+        // We have to submit the order in the same thread as the Context; using Reactive
+        // Programming
         // So we submit a task; then wait for it to get done
-        OpenPositionTask task = new OpenPositionTask(clientOrderID, instrument, cmd, quantityNormalized, price, slippage);
+        OpenPositionTask task = new OpenPositionTask(
+                clientOrderID,
+                instrument,
+                cmd,
+                quantityNormalized,
+                price,
+                slippage);
         context.executeTask(task);
 
         // we have to wait for a given timeout
         long sleepTime = 100;
         int iterations = (int) (timeout / sleepTime);
 
-        for (int i = 0; i < iterations; i++)
-        {
-            // sleep for a minimal amount at a time; so we can get the result quick when the task is done
-            try
-            {
+        for (int i = 0; i < iterations; i++) {
+            // sleep for a minimal amount at a time; so we can get the result quick when the
+            // task is done
+            try {
                 Thread.sleep(sleepTime);
-            }
-            catch (InterruptedException ie)
-            {
-
+            } catch (InterruptedException ie) {
             }
 
-            if (task.taskDone)
-            {
-                if (task.rejectReason != null)
-                {
+            if (task.taskDone) {
+                if (task.rejectReason != null) {
                     throw new RuntimeException(task.rejectReason);
-                }
-                else
-                {
+                } else {
                     return task.order;
                 }
             }
         }
 
         throw new RuntimeException("Timeout submitting order");
-
-        //  return null;
+        // return null;
     }
 
-    public class OpenPositionTask implements Callable<IOrder>
-    {
+    public class OpenPositionTask implements Callable<IOrder> {
+
         private String clientOrderID;
 
         private final Instrument instrument;
@@ -529,8 +482,13 @@ public class DukasStrategy implements IStrategy
 
         public boolean taskDone = false;
 
-        public OpenPositionTask(String clientOrderID, Instrument instrument, OrderCommand cmd, double quantity, double price, double slippage)
-        {
+        public OpenPositionTask(
+                String clientOrderID,
+                Instrument instrument,
+                OrderCommand cmd,
+                double quantity,
+                double price,
+                double slippage) {
             this.clientOrderID = clientOrderID;
             this.instrument = instrument;
             this.cmd = cmd;
@@ -539,28 +497,27 @@ public class DukasStrategy implements IStrategy
             this.slippage = slippage;
         }
 
-        public IOrder call() throws Exception
-        {
-            try
-            {
-                order = engine.submitOrder(clientOrderID, instrument, cmd, quantity, price, slippage);
+        public IOrder call() throws Exception {
+            try {
+                order = engine.submitOrder(
+                        clientOrderID,
+                        instrument,
+                        cmd,
+                        quantity,
+                        price,
+                        slippage);
 
                 log.info("order submitted " + order);
 
                 taskDone = true;
 
                 return order;
-            }
-            catch (Throwable e)
-            {
+            } catch (Throwable e) {
                 error = e;
 
-                if (e.getMessage().contains("Label not unique"))
-                {
+                if (e.getMessage().contains("Label not unique")) {
                     rejectReason = "Duplicate ClientOrderID: " + clientOrderID;
-                }
-                else
-                {
+                } else {
                     rejectReason = e.getMessage();
                 }
 
@@ -575,83 +532,88 @@ public class DukasStrategy implements IStrategy
 
     /**
      * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/close-orders
-     * 
+     *
      * @param clientOrderID
      * @return
      * @throws Exception
      */
-    public IOrder closePosition(String clientOrderID, String dukasOrderID, double quantity, double price, double slippage, long timeout) throws Exception
-    {
+    public IOrder closePosition(
+            Optional<String> clientOrderID,
+            Optional<String> dukasOrderID,
+            double quantity,
+            double price,
+            double slippage,
+            long timeout)
+            throws Exception {
         if (context == null)
-            throw new RuntimeException("Strategy context not initialized yet");
+            throw new RuntimeException(
+                    "Strategy context not initialized yet");
 
         // Lookup the order
 
         IOrder order = null;
 
         // Give priority to DukasOrderID
-
-        if (DukasUtil.isDefined(dukasOrderID))
-        {
-            order = engine.getOrderById(dukasOrderID);
+        String orderId = null;
+        if (dukasOrderID.isPresent()) {
+            orderId = dukasOrderID.get();
+            order = engine.getOrderById(orderId);
 
             if (order == null)
-                throw new RuntimeException("Invalid DukasOrderID " + dukasOrderID);
+                throw new RuntimeException(
+                        "Invalid DukasOrderID " + dukasOrderID);
         }
         // Then ClientOrderID
-        else if (DukasUtil.isDefined(clientOrderID))
-        {
-            order = engine.getOrder(clientOrderID);
+        else if (clientOrderID.isPresent()) {
+            orderId = clientOrderID.get();
+
+            order = engine.getOrder(orderId);
 
             if (order == null)
-                throw new RuntimeException("Invalid ClientOrderID " + clientOrderID);
-
+                throw new RuntimeException(
+                        "Invalid ClientOrderID " + clientOrderID);
+        } else {
+            throw new RuntimeException(
+                    "Either DukasOrderID or ClientOrderID are required");
         }
-        else
-        {
-            throw new RuntimeException("Either DukasOrderID or ClientOrderID are required");
-        }
 
-        if (order.getState() != IOrder.State.OPENED)
-            throw new RuntimeException("Cannot close order in current state: " + order.getState());
+        if (order.getState() != IOrder.State.FILLED)
+            throw new RuntimeException(
+                    "Cannot close order in current state: " + order.getState());
 
         // Default slippage; 10 pips
-        if (slippage <= 0.0)
+        if (slippage < 0.0)
             slippage = 10;
-        
+
         // Normalize quantity to Dukascopy quantity (in lots of 100,000)
         double quantityNormalized = quantity / DukasConstants.lotSize;
-        
-        
-        // We have to submit the order in the same thread as the Context; using Reactive Programming
+
+        // We have to submit the order in the same thread as the Context; using Reactive
+        // Programming
         // So we submit a task; then wait for it to get done
-        ClosePositionTask task = new ClosePositionTask(order, quantityNormalized, price, slippage);
+        ClosePositionTask task = new ClosePositionTask(
+                order,
+                quantityNormalized,
+                price,
+                slippage);
         context.executeTask(task);
 
         // we have to wait for a given timeout
         long sleepTime = 100;
         int iterations = (int) (timeout / sleepTime);
 
-        for (int i = 0; i < iterations; i++)
-        {
-            // sleep for a minimal amount at a time; so we can get the result quick when the task is done
-            try
-            {
+        for (int i = 0; i < iterations; i++) {
+            // sleep for a minimal amount at a time; so we can get the result quick when the
+            // task is done
+            try {
                 Thread.sleep(sleepTime);
-            }
-            catch (InterruptedException ie)
-            {
-
+            } catch (InterruptedException ie) {
             }
 
-            if (task.taskDone)
-            {
-                if (task.rejectReason != null)
-                {
+            if (task.taskDone) {
+                if (task.rejectReason != null) {
                     throw new RuntimeException(task.rejectReason);
-                }
-                else
-                {
+                } else {
                     return task.order;
                 }
             }
@@ -660,8 +622,7 @@ public class DukasStrategy implements IStrategy
         return null;
     }
 
-    public class ClosePositionTask implements Callable<IOrder>
-    {
+    public class ClosePositionTask implements Callable<IOrder> {
 
         private IOrder order;
 
@@ -677,8 +638,11 @@ public class DukasStrategy implements IStrategy
 
         public String rejectReason = null;
 
-        public ClosePositionTask(IOrder order, double quantity, double price, double slippage)
-        {
+        public ClosePositionTask(
+                IOrder order,
+                double quantity,
+                double price,
+                double slippage) {
             this.order = order;
             this.quantity = quantity;
             this.price = price;
@@ -686,39 +650,27 @@ public class DukasStrategy implements IStrategy
         }
 
         @Override
-        public IOrder call() throws Exception
-        {
-
-            try
-            {
-                if (order.getState() == IOrder.State.OPENED)
-                {
-                    if (quantity == 0.0 && price == 0.0 && slippage == 0.0)
-                    {
+        public IOrder call() throws Exception {
+            try {
+                if (order.getState() == IOrder.State.FILLED) {
+                    log.info("quantity: " + quantity);
+                    log.info("price: " + price);
+                    log.info("slippage: " + slippage);
+                    if (quantity == 0.0 && price == 0.0 && slippage == 0.0) {
                         order.close();
-                    }
-                    else if (quantity > 0.0 && price == 0.0 && slippage == 0.0)
-                    {
+                    } else if (quantity > 0.0 && price == 0.0 && slippage == 0.0) {
                         order.close(quantity);
-                    }
-                    else if (quantity > 0.0 && price > 0.0 && slippage == 0.0)
-                    {
+                    } else if (quantity > 0.0 && price > 0.0 && slippage == 0.0) {
                         order.close(quantity, price);
-                    }
-                    else if (quantity > 0.0 && price > 0.0 && slippage > 0.0)
-                    {
+                    } else if (quantity > 0.0 && price > 0.0 && slippage > 0.0) {
                         order.close(quantity, price, slippage);
                     }
-                }
-                else
-                {
+                } else {
                     rejectReason = "Invalid order state: " + order.getState();
                 }
 
                 taskDone = true;
-            }
-            catch (Throwable e)
-            {
+            } catch (Throwable e) {
                 error = e;
                 rejectReason = e.getMessage();
 
@@ -729,12 +681,11 @@ public class DukasStrategy implements IStrategy
 
             return order;
         }
-
     }
 
     /**
      * Gets historical data
-     * 
+     *
      * @param instrument
      * @param period
      * @param pOfferSide
@@ -743,29 +694,33 @@ public class DukasStrategy implements IStrategy
      * @return
      * @throws Exception
      */
-    public List<IBar> getHistData(Instrument instrument, Period period, OfferSide pOfferSide, long timeFrom, long timeTo) throws Exception
-    {
-
-        if (instrument == null || period == null)
-        {
+    public List<IBar> getHistData(
+            Instrument instrument,
+            Period period,
+            OfferSide pOfferSide,
+            long timeFrom,
+            long timeTo)
+            throws Exception {
+        if (instrument == null || period == null) {
             return null;
         }
 
         IContext context = reference.get();
 
-        if (context == null)
-        {
+        if (context == null) {
             return null;
         }
 
-        List<IBar> bars = context.getHistory().getBars(instrument, period, pOfferSide, timeFrom, timeTo);
+        List<IBar> bars = context
+                .getHistory()
+                .getBars(instrument, period, pOfferSide, timeFrom, timeTo);
 
         return bars;
-
     }
 
-    public DukasSubscription adjustSubscription(String id, Set<Instrument> instruments)
-    {
+    public DukasSubscription adjustSubscription(
+            String id,
+            Set<Instrument> instruments) {
         DukasSubscription subscription = new DukasSubscription();
         subscription.id = id;
         subscription.time = System.currentTimeMillis();
@@ -773,34 +728,29 @@ public class DukasStrategy implements IStrategy
 
         IContext context = reference.get();
 
-        if (context != null)
-        {
+        if (context != null) {
             Set<Instrument> current = context.getSubscribedInstruments();
 
             Set<Instrument> excessive = new TreeSet<>();
             Set<Instrument> lacking = new TreeSet<>();
 
-            for (Instrument inst : current)
-            {
+            for (Instrument inst : current) {
                 if (instruments.contains(inst) == false)
                     excessive.add(inst);
             }
 
-            for (Instrument inst : instruments)
-            {
+            for (Instrument inst : instruments) {
                 if (current.contains(inst) == false)
                     lacking.add(inst);
             }
 
-            if (CollectionUtils.isNotEmpty(excessive))
-            {
+            if (CollectionUtils.isNotEmpty(excessive)) {
                 excessive.forEach(i -> log.info("Unsubscribing : {} - {}", id, i));
 
                 context.unsubscribeInstruments(new HashSet<>(excessive));
             }
 
-            if (CollectionUtils.isNotEmpty(lacking))
-            {
+            if (CollectionUtils.isNotEmpty(lacking)) {
                 lacking.forEach(i -> log.info("Subscribing : {} - {}", id, i));
 
                 context.setSubscribedInstruments(new HashSet<>(lacking), false);
@@ -809,75 +759,52 @@ public class DukasStrategy implements IStrategy
             subscription.success = true;
 
             log.info("Adjusted subscription : {}", subscription);
-
-        }
-        else
-        {
-
+        } else {
             subscription.success = false;
 
             log.info("Skipped subscription : {}", subscription);
-
         }
 
         return subscription;
-
     }
 
-    public void subscribeToTOB(DukasSubscriber ws)
-    {
+    public void subscribeToTOB(DukasSubscriber ws) {
         lock.lock();
-        try
-        {
+        try {
             tobSubscribers.add(ws);
             tobSubscribersSize = tobSubscribers.size();
-        }
-        finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
-    public void unsubscribeFromTOB(DukasSubscriber ws)
-    {
+    public void unsubscribeFromTOB(DukasSubscriber ws) {
         lock.lock();
-        try
-        {
+        try {
             tobSubscribers.remove(ws);
             tobSubscribersSize = tobSubscribers.size();
-        }
-        finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
-    public void subscribeToOrderBook(DukasSubscriber ws)
-    {
+    public void subscribeToOrderBook(DukasSubscriber ws) {
         lock.lock();
-        try
-        {
+        try {
             orderBookSubscribers.add(ws);
             orderBookSubscribersSize = orderBookSubscribers.size();
-        }
-        finally
-        {
+        } finally {
             lock.unlock();
         }
     }
 
-    public void unsubscribeFromOrderBook(DukasSubscriber ws)
-    {
+    public void unsubscribeFromOrderBook(DukasSubscriber ws) {
         lock.lock();
-        try
-        {
+        try {
             orderBookSubscribers.remove(ws);
             orderBookSubscribersSize = orderBookSubscribers.size();
-        }
-        finally
-        {
+        } finally {
             lock.unlock();
         }
     }
-
 }

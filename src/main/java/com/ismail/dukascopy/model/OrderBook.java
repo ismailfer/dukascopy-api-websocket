@@ -1,9 +1,7 @@
 package com.ismail.dukascopy.model;
 
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import lombok.Data;
 import lombok.ToString;
 
@@ -16,9 +14,8 @@ import lombok.ToString;
 @Data
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OrderBook
-{    
-       
+public class OrderBook {
+
     public String symbol = null;
 
     public double bidQty = 0.0;
@@ -32,9 +29,9 @@ public class OrderBook
     public double last = 0.0;
 
     public double spread;
-    
+
     public double spreadBps;
-    
+
     public long updateTime = 0L;
 
     public int updateNumber = 0;
@@ -42,7 +39,7 @@ public class OrderBook
     public int depthLevels = 0;
 
     public boolean live = false;
-    
+
     public List<OrderBookEntry> bids = null;
 
     public List<OrderBookEntry> asks = null;
