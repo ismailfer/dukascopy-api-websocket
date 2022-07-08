@@ -28,7 +28,7 @@ public class HistDataController
     @Autowired
     private DukasStrategy strategy;
 
-    @RequestMapping(value = "/histdata", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/v1/histdata", method = RequestMethod.GET)
     public List<Candle> getHistData(@RequestParam String instID, @RequestParam int period, @RequestParam long timeFrom, @RequestParam long timeTo)
     {
         Instrument instrument = Instrument.valueOf(instID);
