@@ -6,41 +6,34 @@ package com.ismail.dukascopy.model;
  * @author ismail
  * @since 20220617
  */
-public class ApiException extends RuntimeException
-{
+public class ApiException extends RuntimeException {
     private static final long serialVersionUID = 3788669840036201041L;
 
-
-    
     private ApiError apiError = null;
-    
+
     /**
      * Instantiates a new binance api exception.
      */
-    public ApiException()
-    {
+    public ApiException() {
         super();
     }
- 
-    public ApiException(ApiError apiError)
-    {
+
+    public ApiException(ApiError apiError) {
         super(apiError.getErrorCode() + "-" + apiError.getErrorMsg());
-        
+
         this.apiError = apiError;
     }
-    
-    public ApiException(int pErrorCode, String pErrorMsg)
-    {
+
+    public ApiException(int pErrorCode, String pErrorMsg) {
         super(pErrorCode + "-" + pErrorMsg);
     }
-    
+
     /**
      * Instantiates a new binance api exception.
      *
      * @param message the message
      */
-    public ApiException(String message)
-    {
+    public ApiException(String message) {
         super(message);
     }
 
@@ -49,8 +42,7 @@ public class ApiException extends RuntimeException
      *
      * @param cause the cause
      */
-    public ApiException(Throwable cause)
-    {
+    public ApiException(Throwable cause) {
         super(cause);
     }
 
@@ -60,14 +52,12 @@ public class ApiException extends RuntimeException
      * @param message the message
      * @param cause   the cause
      */
-    public ApiException(String message, Throwable cause)
-    {
+    public ApiException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ApiError getErrorCode()
-    {
+    public ApiError getErrorCode() {
         return apiError;
     }
-    
+
 }

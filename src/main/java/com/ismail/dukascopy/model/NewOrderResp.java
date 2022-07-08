@@ -17,20 +17,19 @@ import lombok.ToString;
 @ToString
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NewOrderResp
-{           
+public class NewOrderResp {
     public String symbol = null;
 
     public String clientOrderID = null;
 
     public String dukasOrderID = null;
-    
+
     public double fillQty = 0.0;
-    
+
     public double fillPrice = 0.0;
 
     public boolean orderSuccess = false;
-    
+
     public String rejectReason = null;
-  
+
 }

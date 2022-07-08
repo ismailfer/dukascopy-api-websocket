@@ -28,8 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 20220617
  */
 @Slf4j
-public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscriber
-{
+public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscriber {
     private DukasService dukasService;
 
     public DukasStrategy strategy;
@@ -45,23 +44,23 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
     private boolean tob = true;
 
     @Override
-    public void onWebSocketConnect(Session sess)
-    {
+    public void onWebSocketConnect(Session sess) {
         super.onWebSocketConnect(sess);
 
         this.sess = sess;
-        
+
         sess.setIdleTimeout(Duration.ZERO);
 
         remoteEndpoint = sess.getRemote();
 
         String remoteAddr = DukasUtil.getRemoteAddress(sess.getRemoteAddress());
-        
+
         mEventQueue = new ObjectQueue<>(true);
 
         // start the event processor
         eventProcessor = new EventProcessor();
-        eventProcessor.setName(getClass().getSimpleName() + "_" + eventProcessor.getClass().getSimpleName() + "_" + sess.hashCode());
+        eventProcessor.setName(
+                getClass().getSimpleName() + "_" + eventProcessor.getClass().getSimpleName() + "_" + sess.hashCode());
         eventProcessor.setDaemon(true);
         eventProcessor.setPriority(Thread.MIN_PRIORITY);
         eventProcessor.start();
@@ -75,28 +74,22 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
         // --------------------------------------------------------------------------------------------------
         String instIDs = DukasUtil.get(sess.getUpgradeRequest(), "instIDs", null);
 
-        if (DukasUtil.isDefined(instIDs))
-        {
+        if (DukasUtil.isDefined(instIDs)) {
             List<String> instIDList = DukasUtil.splitToArrayList(instIDs, ',');
 
             Set<Instrument> instruments = new TreeSet<>();
 
-            for (String instrumentID : instIDList)
-            {
+            for (String instrumentID : instIDList) {
                 Instrument instrument = Instrument.valueOf(instrumentID);
 
-                if (instrument != null)
-                {
+                if (instrument != null) {
                     instruments.add(instrument);
-                }
-                else
-                {
+                } else {
                     log.warn("Invalid instrument: " + instrumentID);
                 }
             }
 
-            if (instruments.size() > 0)
-            {
+            if (instruments.size() > 0) {
                 strategy.adjustSubscription("new-sub-" + System.currentTimeMillis(), instruments);
             }
         }
@@ -108,12 +101,9 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
 
         tob = DukasUtil.getb(sess.getUpgradeRequest(), "topOfBook", true);
 
-        if (tob)
-        {
+        if (tob) {
             strategy.subscribeToTOB(this);
-        }
-        else
-        {
+        } else {
             strategy.subscribeToOrderBook(this);
         }
 
@@ -122,8 +112,7 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
     }
 
     @Override
-    public void onWebSocketText(String message)
-    {
+    public void onWebSocketText(String message) {
         super.onWebSocketText(message);
 
         log.info("onWebSocketText() << " + message);
@@ -131,39 +120,32 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason)
-    {
+    public void onWebSocketClose(int statusCode, String reason) {
         super.onWebSocketClose(statusCode, reason);
 
         log.info("onWebSocketClose() << " + statusCode + ":" + reason);
 
-        if (tob)
-        {
+        if (tob) {
             strategy.unsubscribeFromTOB(this);
-        }
-        else
-        {
+        } else {
             strategy.unsubscribeFromOrderBook(this);
         }
     }
 
     @Override
-    public void onWebSocketError(Throwable cause)
-    {
+    public void onWebSocketError(Throwable cause) {
         super.onWebSocketError(cause);
 
         log.info("onWebSocketError() << " + cause.getMessage(), cause);
 
     }
 
-    public void awaitClosure() throws InterruptedException
-    {
+    public void awaitClosure() throws InterruptedException {
         log.info("onWebSocketClose() ");
 
     }
 
-    private void sendMessage_(String text) throws IOException
-    {
+    private void sendMessage_(String text) throws IOException {
         if (log.isDebugEnabled())
             log.debug("sendMessage() >> " + text);
 
@@ -172,40 +154,31 @@ public class MarketDataWebsocket extends WebSocketAdapter implements DukasSubscr
     }
 
     @Override
-    public void sendMessage(String text)
-    {
+    public void sendMessage(String text) {
         EventJob job = new EventJob();
         job.text = text;
 
         mEventQueue.put(job);
     }
 
-    public class EventJob
-    {
+    public class EventJob {
         public String text;
     }
 
-    public class EventProcessor extends Thread
-    {
+    public class EventProcessor extends Thread {
 
-        public void run()
-        {
+        public void run() {
             log.info(getName(), ".run() STARTED");
 
-            while (sess.isOpen())
-            {
-                try
-                {
+            while (sess.isOpen()) {
+                try {
                     EventJob job = mEventQueue.receiveWithWait(1000);
 
-                    if (job != null)
-                    {
+                    if (job != null) {
                         sendMessage_(job.text);
                     }
 
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     log.warn("Non-fatal Error: ", e.getMessage(), e);
                 }
 

@@ -2,12 +2,10 @@ package com.ismail.dukascopy.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import lombok.Getter;
 
 @Getter
-public enum TimeInForce
-{
+public enum TimeInForce {
     Day('0'), //
     Good_till_cancel('1'), //
     Immediate_or_cancel('3'), //
@@ -16,20 +14,18 @@ public enum TimeInForce
 
     private final char code;
 
-    TimeInForce(char code)
-    {
+    TimeInForce(char code) {
         this.code = code;
     }
-    
-    public static List<TimeInForce> getAllValues()
-    {
+
+    public static List<TimeInForce> getAllValues() {
         ArrayList<TimeInForce> list = new ArrayList<>();
         list.add(Day);
         list.add(Good_till_cancel);
         list.add(Immediate_or_cancel);
         list.add(Fill_or_kill);
         list.add(Good_till_date);
-        
+
         return list;
     }
 }
