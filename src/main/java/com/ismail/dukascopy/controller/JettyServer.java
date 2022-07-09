@@ -1,6 +1,5 @@
 package com.ismail.dukascopy.controller;
 
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -18,8 +17,7 @@ import java.util.LinkedHashMap;
  * @since 20220617
  */
 @Slf4j
-public class JettyServer
-{
+public class JettyServer {
 
     private final Server server;
     private final ServerConnector connector;
@@ -27,8 +25,7 @@ public class JettyServer
 
     LinkedHashMap<String, Class> websocketMappings = new LinkedHashMap<>();
 
-    public JettyServer()
-    {
+    public JettyServer() {
         server = new Server();
         connector = new ServerConnector(server);
         server.addConnector(connector);
@@ -39,7 +36,6 @@ public class JettyServer
         context.setContextPath("/");
         server.setHandler(context);
 
-
     }
 
     /**
@@ -49,52 +45,43 @@ public class JettyServer
      * @param pMapping
      * @param pWebsocketClass
      */
-    public void addWebsocket(String pMapping, Class pWebsocketClass)
-    {
+    public void addWebsocket(String pMapping, Class pWebsocketClass) {
 
-            // Add websockets
-            websocketMappings.put(pMapping, pWebsocketClass);
+        // Add websockets
+        websocketMappings.put(pMapping, pWebsocketClass);
     }
 
-    public void configureWebsockets()
-    {
+    public void configureWebsockets() {
         // Configure specific websocket behavior
-        JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) ->
-        {
+        JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             // Configure default max size
             wsContainer.setMaxTextMessageSize(65535);
 
             // Add websockets
             // wsContainer.addMapping("/ticker/*", TickerWebsocket.class);
-            for (String mapping : websocketMappings.keySet())
-            {
+            for (String mapping : websocketMappings.keySet()) {
                 wsContainer.addMapping(mapping, websocketMappings.get(mapping));
             }
         });
     }
 
-    public void setPort(int port)
-    {
+    public void setPort(int port) {
         connector.setPort(port);
     }
 
-    public void start() throws Exception
-    {
+    public void start() throws Exception {
         server.start();
     }
 
-    public URI getURI()
-    {
+    public URI getURI() {
         return server.getURI();
     }
 
-    public void stop() throws Exception
-    {
+    public void stop() throws Exception {
         server.stop();
     }
 
-    public void join() throws InterruptedException
-    {        
+    public void join() throws InterruptedException {
         server.join();
     }
 
