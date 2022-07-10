@@ -160,10 +160,12 @@ public class OrderController {
 		try {
 			long timeout = 5000;
 
-			strategy.closePosition(clientOrderID, dukasOrderID, quantity == null ? 0.0 : quantity.getAsDouble(),
+			IOrder order = strategy.closePosition(clientOrderID, dukasOrderID,
+					quantity == null ? 0.0 : quantity.getAsDouble(),
 					price == null ? 0.0 : price.getAsDouble(),
 					slippage == null ? 0.0 : slippage.getAsDouble(), timeout);
 
+			resp.setOrder(order);
 			resp.setCloseSuccess(true);
 
 			return resp;

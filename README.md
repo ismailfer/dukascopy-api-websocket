@@ -81,11 +81,12 @@ the application will be running on two ports:
 
 To get historical bar data:
 
--   GET `http://localhost:7080/api/v1/history?instID=EURUSD&timeFrame=15MIN&timeFrom=0&timeTo=0`
+-   GET `http://localhost:7080/api/v1/history?instID=EURUSD&timeFrame=15MIN&from=0`
 
 Params:
 
 timeFrame: 1SEC | 10SEC | 1MIN | 5MIN | 10MIN | 15MIN | 1HOUR | DAILY
+to (optional) : unix timestamp
 
 ```json
 [
