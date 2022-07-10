@@ -1,5 +1,6 @@
 package com.ismail.dukascopy.model;
 
+import com.dukascopy.api.IOrder;
 import com.dukascopy.api.IOrder.State;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,13 +19,14 @@ import lombok.ToString;
 @ToString
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ClosePositionResp
-{           
+public class ClosePositionResp {
 
     public String clientOrderID = null;
-  
+
+    public IOrder order = null;
+
     public boolean closeSuccess = false;
-    
+
     public String rejectReason = null;
-  
+
 }

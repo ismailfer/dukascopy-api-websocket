@@ -31,13 +31,12 @@ public class HistDataController {
     @RequestMapping(value = "/api/v1/history", method = RequestMethod.GET)
     public List<Candle> getHistData(
             @RequestParam String instID,
-            @RequestParam String timeFrame,
-            @RequestParam(required = false) OptionalLong from,
-            @RequestParam(required = false) OptionalLong to) {
+            @RequestParam(defaultValue = "DAILY") String timeFrame,
+            @RequestParam long from,
+            @RequestParam(required = false, defaultValue = "0") String to) {
 
         Instrument instrument = Instrument.valueOf(instID);
-        long timeFrom = from == null ? 0 : from.getAsLong();
-        long timeTo = to == null ? 0 : to.getAsLong();
+        long timeTo = Long.parseLong(to);
 
         if (instrument == null)
             throw new ApiException(
@@ -75,15 +74,15 @@ public class HistDataController {
                 break;
         }
 
-        // timeFrom
-        if (timeFrom == 0L) {
-            timeFrom = System.currentTimeMillis() - DukasUtil.DAY * 5;
+        // from
+        if (from == 0L) {
+            from = System.currentTimeMillis() - DukasUtil.DAY * 5;
             timeTo = System.currentTimeMillis();
 
             // normalize time
             long periodInMillis = period.getInterval();
 
-            timeFrom = timeFrom - timeFrom % periodInMillis;
+            from = from - from % periodInMillis;
             timeTo = timeTo - timeTo % periodInMillis;
         } else {
             timeTo = System.currentTimeMillis();
@@ -91,13 +90,12 @@ public class HistDataController {
             long periodInMillis = period.getInterval();
             timeTo = timeTo - timeTo % periodInMillis;
         }
-
         try {
             List<IBar> bars = strategy.getHistData(
                     instrument,
                     period,
                     OfferSide.BID,
-                    timeFrom,
+                    from,
                     timeTo);
 
             if (bars != null && bars.size() > 0) {
@@ -105,7 +103,6 @@ public class HistDataController {
 
                 for (IBar bar : bars) {
                     Candle st = new Candle();
-                    st.symbol = Optional.of(instID.replace("/", ""));
                     st.open = bar.getOpen();
                     st.high = bar.getHigh();
                     st.low = bar.getLow();

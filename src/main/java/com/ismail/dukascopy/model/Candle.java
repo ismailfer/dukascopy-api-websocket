@@ -1,6 +1,8 @@
 package com.ismail.dukascopy.model;
 
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -32,10 +34,10 @@ public class Candle {
 
     public double volume = 0.0;
 
-    public long ticks;
+    public OptionalLong ticks;
 
     public long time;
 
-    public int period;
+    public OptionalInt period;
 
 }
