@@ -1,5 +1,6 @@
 package com.ismail.dukascopy.service;
 
+import com.dukascopy.api.Filter;
 import com.dukascopy.api.IAccount;
 import com.dukascopy.api.IBar;
 import com.dukascopy.api.IConnectionStatusMessage;
@@ -713,7 +714,7 @@ public class DukasStrategy implements IStrategy {
 
         List<IBar> bars = context
                 .getHistory()
-                .getBars(instrument, period, pOfferSide, timeFrom, timeTo);
+                .getBars(instrument, period, pOfferSide, Filter.WEEKENDS, timeFrom, timeTo);
 
         return bars;
     }
