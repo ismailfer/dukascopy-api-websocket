@@ -91,25 +91,33 @@ public class HistDataController {
             timeTo = timeTo - timeTo % periodInMillis;
         }
         try {
-            List<IBar> bars = strategy.getHistData(
+            List<IBar> askBars = strategy.getHistData(
+                    instrument,
+                    period,
+                    OfferSide.ASK,
+                    from,
+                    timeTo);
+            List<IBar> bidBars = strategy.getHistData(
                     instrument,
                     period,
                     OfferSide.BID,
                     from,
                     timeTo);
 
-            if (bars != null && bars.size() > 0) {
-                ArrayList<Candle> list = new ArrayList<>(bars.size());
+            if (bidBars != null && bidBars.size() > 0) {
+                ArrayList<Candle> list = new ArrayList<>(bidBars.size());
 
-                for (IBar bar : bars) {
+                for (int i = 0; i < bidBars.size(); i++) {
+                    IBar askBar = askBars.get(i);
+                    IBar bidBar = bidBars.get(i);
                     Candle st = new Candle();
-                    st.open = bar.getOpen();
-                    st.high = bar.getHigh();
-                    st.low = bar.getLow();
-                    st.close = bar.getClose();
-                    st.volume = bar.getVolume();
-                    st.time = bar.getTime();
-
+                    st.open = askBar.getOpen();
+                    st.high = askBar.getHigh();
+                    st.low = askBar.getLow();
+                    st.close = askBar.getClose();
+                    st.volume = askBar.getVolume();
+                    st.time = askBar.getTime();
+                    st.spread = (st.close - bidBar.getClose()) * (instrument.getPipScale() == 2 ? 100 : 10000);
                     if (instrument.getType() == Type.FOREX) {
                         st.volume *= 100000.0;
                     }
