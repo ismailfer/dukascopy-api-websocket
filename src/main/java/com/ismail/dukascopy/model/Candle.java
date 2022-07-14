@@ -34,6 +34,8 @@ public class Candle {
 
     public double volume = 0.0;
 
+    public double spread = 0.0;
+
     public OptionalLong ticks;
 
     public long time;
