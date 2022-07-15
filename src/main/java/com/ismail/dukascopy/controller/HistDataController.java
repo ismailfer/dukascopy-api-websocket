@@ -104,7 +104,13 @@ public class HistDataController {
                     from,
                     timeTo);
 
-            if (bidBars != null && bidBars.size() > 0) {
+            int pipsFactor = 1;
+
+            for (int i = 0; i < instrument.getPipScale(); i++) {
+                pipsFactor *= 10;
+            }
+
+            if (askBars != null && bidBars != null && bidBars.size() > 0) {
                 ArrayList<Candle> list = new ArrayList<>(bidBars.size());
 
                 for (int i = 0; i < bidBars.size(); i++) {
@@ -117,7 +123,7 @@ public class HistDataController {
                     st.close = askBar.getClose();
                     st.volume = askBar.getVolume();
                     st.time = askBar.getTime();
-                    st.spread = (st.close - bidBar.getClose()) * (instrument.getPipScale() == 2 ? 100 : 10000);
+                    st.spread = (st.close - bidBar.getClose()) * pipsFactor;
                     if (instrument.getType() == Type.FOREX) {
                         st.volume *= 100000.0;
                     }
