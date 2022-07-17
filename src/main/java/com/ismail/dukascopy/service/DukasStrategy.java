@@ -323,6 +323,18 @@ public class DukasStrategy implements IStrategy {
     }
 
     /**
+     * @return
+     * @throws Exception
+     */
+    public List<IOrder> getPositions()
+            throws Exception {
+        if (context == null)
+            throw new RuntimeException(
+                    "Strategy context not initialized yet");
+        return engine.getOrders();
+    }
+
+    /**
      * @param clientOrderID
      * @param dukasOrderID
      * @return

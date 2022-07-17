@@ -1,5 +1,7 @@
 package com.ismail.dukascopy.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -34,6 +36,33 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderController {
 	@Autowired
 	private DukasStrategy strategy;
+
+	/**
+	 * Get position detail (aka Dukas Order)
+	 * 
+	 * @param clientOrderID
+	 * @param dukasOrderID
+	 * @return
+	 */
+	@RequestMapping(value = "/api/v1/positions", method = RequestMethod.GET)
+	public ArrayList<Position> getPositions() {
+
+		ArrayList<Position> positions = new ArrayList<>();
+		try {
+			List<IOrder> openOrders = strategy.getPositions();
+
+			openOrders.forEach(order -> {
+				Position position = new Position();
+				convertOrderToPosition(order, position);
+				positions.add(position);
+			});
+
+		} catch (Exception e) {
+			throw new ApiException(e.getMessage());
+		}
+
+		return positions;
+	}
 
 	/**
 	 * Get position detail (aka Dukas Order)
