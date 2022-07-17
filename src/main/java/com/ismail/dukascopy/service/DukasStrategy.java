@@ -471,8 +471,6 @@ public class DukasStrategy implements IStrategy {
 
         private double slippage = 5;
 
-        private double stopLossPips;
-
         // result
 
         public IOrder order = null;
@@ -500,6 +498,7 @@ public class DukasStrategy implements IStrategy {
 
         public IOrder call() throws Exception {
             try {
+
                 order = engine.submitOrder(
                         clientOrderID,
                         instrument,
@@ -514,7 +513,6 @@ public class DukasStrategy implements IStrategy {
 
                 return order;
             } catch (Throwable e) {
-                error = e;
 
                 if (e.getMessage().contains("Label not unique")) {
                     rejectReason = "Duplicate ClientOrderID: " + clientOrderID;
@@ -522,6 +520,145 @@ public class DukasStrategy implements IStrategy {
                     rejectReason = e.getMessage();
                 }
 
+                taskDone = true;
+
+                e.printStackTrace();
+
+                return null;
+            }
+        }
+    }
+
+    /**
+     * https://www.dukascopy.com/wiki/en/development/strategy-api/orders-and-positions/take-profit
+     *
+     * @param clientOrderID
+     * @param takeProfitPips
+     * @param stopLossPips
+     * @return
+     * @throws Exception
+     */
+    public IOrder editPosition(
+            Optional<String> clientOrderID,
+            Optional<String> dukasOrderID,
+            double takeProfitPips,
+            double stopLossPips,
+            long timeout)
+            throws Exception {
+        if (context == null)
+            throw new RuntimeException(
+                    "Strategy context not initialized yet");
+
+        IOrder order = null;
+
+        // Give priority to DukasOrderID
+        String orderId = null;
+        if (dukasOrderID.isPresent()) {
+            orderId = dukasOrderID.get();
+            order = engine.getOrderById(orderId);
+
+            if (order == null)
+                throw new RuntimeException(
+                        "Invalid DukasOrderID " + dukasOrderID);
+        }
+        // Then ClientOrderID
+        else if (clientOrderID.isPresent()) {
+            orderId = clientOrderID.get();
+
+            order = engine.getOrder(orderId);
+
+            if (order == null)
+                throw new RuntimeException(
+                        "Invalid ClientOrderID " + clientOrderID);
+        } else {
+            throw new RuntimeException(
+                    "Either DukasOrderID or ClientOrderID are required");
+        }
+
+        // We have to submit the order in the same thread as the Context; using Reactive
+        // Programming
+        // So we submit a task; then wait for it to get done
+        EditPositionTask task = new EditPositionTask(order, takeProfitPips, stopLossPips);
+        context.executeTask(task);
+
+        // we have to wait for a given timeout
+        long sleepTime = 100;
+        int iterations = (int) (timeout / sleepTime);
+
+        for (int i = 0; i < iterations; i++) {
+            // sleep for a minimal amount at a time; so we can get the result quick when the
+            // task is done
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ie) {
+            }
+
+            if (task.taskDone) {
+                if (task.rejectReason != null) {
+                    log.info("rejectReason: " + task.rejectReason);
+                    throw new RuntimeException(task.rejectReason);
+                } else {
+                    return task.order;
+                }
+            }
+        }
+
+        // throw new RuntimeException("Timeout editing order");
+        return null;
+    }
+
+    public class EditPositionTask implements Callable<IOrder> {
+
+        public IOrder order = null;
+
+        private double takeProfitPips;
+
+        private double stopLossPips;
+
+        // result
+
+        public Throwable error = null;
+
+        public String rejectReason = null;
+
+        public boolean taskDone = false;
+
+        public EditPositionTask(
+                IOrder order,
+                double takeProfitPips,
+                double stopLossPips) {
+            this.order = order;
+            this.takeProfitPips = takeProfitPips;
+            this.stopLossPips = stopLossPips;
+        }
+
+        public IOrder call() throws Exception {
+
+            try {
+                if (takeProfitPips > 0L) {
+
+                    log.info("takeProfitPips: " + takeProfitPips);
+                    double entryPrice = order.getOpenPrice();
+                    double takeProfitPrice = entryPrice + takeProfitPips * order.getInstrument().getPipValue();
+                    order.setTakeProfitPrice(takeProfitPrice);
+                }
+
+                if (stopLossPips > 0L) {
+                    log.info("stopLossPips: " + stopLossPips);
+                    double entryPrice = order.getOpenPrice();
+                    double stopLossPrice = entryPrice - stopLossPips * order.getInstrument().getPipValue();
+                    order.setStopLossPrice(stopLossPrice);
+                }
+
+                log.info("order edited " + order);
+
+                taskDone = true;
+
+                return order;
+            } catch (Throwable e) {
+
+                rejectReason = e.getMessage();
+                log.info("rejectReason" + rejectReason);
                 taskDone = true;
 
                 e.printStackTrace();

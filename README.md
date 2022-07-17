@@ -167,7 +167,7 @@ Order response for a rejected order:
 
 ##### Limit Order Example
 
--   POST `http://localhost:7080/order?instID=EURUSD&clientOrderID=ORD_1005&side=Buy&orderType=Limit&quantity=100000.0&price=1.03`
+-   POST `http://localhost:7080/position?instID=EURUSD&clientOrderID=ORD_1005&side=Buy&orderType=Limit&quantity=100000.0&price=1.03`
 
 Order Response for successful placement:
 
@@ -195,9 +195,20 @@ Order response for a rejected order:
 }
 ```
 
+##### Edit Position
+
+-   PUT `http://localhost:7080/position?clientOrderID=ORD_1005`
+
+Params:
+`clientOrderId` or `dukasOrderID`
+
+-   clientOrderID
+-   takeProfitPips
+-   stopLossPips
+
 ##### Close Position
 
--   DELETE `http://localhost:7080/order?clientOrderID=ORD_1005`
+-   DELETE `http://localhost:7080/position?clientOrderID=ORD_1005`
 
 Params:
 `clientOrderId` or `dukasOrderID`

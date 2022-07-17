@@ -86,8 +86,8 @@ public class OrderController {
 			@RequestParam String orderSide,
 			@RequestParam String orderType,
 			@RequestParam double quantity,
-			@RequestParam(required = false) OptionalDouble price,
-			@RequestParam(required = false) OptionalDouble slippage) {
+			@RequestParam(required = false, defaultValue = "0.0") String price,
+			@RequestParam(required = false, defaultValue = "0.0") String slippage) {
 
 		Instrument instrument = Instrument.valueOf(instID);
 		log.info("instrument: " + instrument);
@@ -101,9 +101,13 @@ public class OrderController {
 		try {
 			long timeout = 5000;
 
-			IOrder order = strategy.openPosition(clientOrderID, instrument, OrderSide.valueOf(orderSide),
-					OrderType.valueOf(orderType), quantity,
-					price == null ? 0.0 : price.getAsDouble(), slippage == null ? 5.0 : slippage.getAsDouble(),
+			IOrder order = strategy.openPosition(clientOrderID,
+					instrument,
+					OrderSide.valueOf(orderSide),
+					OrderType.valueOf(orderType),
+					quantity,
+					Double.parseDouble(price),
+					Double.parseDouble(slippage),
 					timeout);
 
 			if (order != null) {
@@ -131,6 +135,63 @@ public class OrderController {
 	}
 
 	/**
+	 * @param clientOrderID
+	 * @param takeProfitPips
+	 * @param stopLossPips
+	 * @return
+	 */
+	@RequestMapping(value = "/api/v1/position", method = RequestMethod.PUT)
+	public Position editPosition(
+			@RequestParam(required = false) Optional<String> clientOrderID,
+			@RequestParam(required = false) Optional<String> dukasOrderID,
+			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPips,
+			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips) {
+
+		Position position = new Position();
+
+		if (dukasOrderID.isEmpty() && clientOrderID.isEmpty()) {
+			position.setErrorMsg("Either dukasOrderID or clientOrderID are mandatory");
+			position.setValid(false);
+			return position;
+		}
+
+		try {
+			long timeout = 5000;
+
+			IOrder order = strategy.editPosition(clientOrderID,
+					dukasOrderID,
+					Double.parseDouble(takeProfitPips),
+					Double.parseDouble(stopLossPips),
+					timeout);
+
+			if (order != null) {
+				position.setClientOrderID(order.getLabel());
+				position.setSymbol(order.getInstrument().name());
+
+				convertOrderToPosition(order, position);
+
+				// If canceled; means it was rejected
+				if (order.getState() == IOrder.State.CANCELED) {
+					position.setValid(false);
+					position.setErrorMsg("Order rejected");
+				} else {
+					position.setValid(true);
+
+				}
+			}
+		} catch (Exception e) {
+			log.error("editPosition() error: ", e.getMessage(), e);
+
+			position.setErrorMsg(e.getMessage());
+			position.setValid(false);
+
+			// throw new ApiException("Server error: " + e.getMessage());
+		}
+
+		return position;
+	}
+
+	/**
 	 * Either clientOrderID or dukasOrderID are mandatory
 	 * 
 	 * @param dukasOrderID
@@ -145,9 +206,9 @@ public class OrderController {
 	@RequestMapping(value = "/api/v1/position", method = RequestMethod.DELETE)
 	public ClosePositionResp closePosition(@RequestParam Optional<String> dukasOrderID,
 			@RequestParam(required = false) Optional<String> clientOrderID,
-			@RequestParam(required = false) OptionalDouble quantity,
-			@RequestParam(required = false) OptionalDouble price,
-			@RequestParam(required = false) OptionalDouble slippage) {
+			@RequestParam(required = false) String quantity,
+			@RequestParam(required = false) String price,
+			@RequestParam(required = false) String slippage) {
 
 		ClosePositionResp resp = new ClosePositionResp();
 
@@ -161,9 +222,9 @@ public class OrderController {
 			long timeout = 5000;
 
 			IOrder order = strategy.closePosition(clientOrderID, dukasOrderID,
-					quantity == null ? 0.0 : quantity.getAsDouble(),
-					price == null ? 0.0 : price.getAsDouble(),
-					slippage == null ? 0.0 : slippage.getAsDouble(), timeout);
+					Double.parseDouble(quantity),
+					Double.parseDouble(price),
+					Double.parseDouble(slippage), timeout);
 
 			resp.setOrder(order);
 			resp.setCloseSuccess(true);
