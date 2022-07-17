@@ -38,7 +38,7 @@ public class Candle {
 
     public OptionalLong ticks;
 
-    public long time;
+    public long timestamp;
 
     public OptionalInt period;
 
