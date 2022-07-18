@@ -647,19 +647,43 @@ public class DukasStrategy implements IStrategy {
         public IOrder call() throws Exception {
 
             try {
-                if (takeProfitPips > 0L) {
+                Instrument instrument = order.getInstrument();
+                if (order.isLong()) {
+                    if (takeProfitPips > 0L) {
 
-                    log.info("takeProfitPips: " + takeProfitPips);
-                    double entryPrice = order.getOpenPrice();
-                    double takeProfitPrice = entryPrice + takeProfitPips * order.getInstrument().getPipValue();
-                    order.setTakeProfitPrice(takeProfitPrice);
+                        log.info("takeProfitPips: " + takeProfitPips);
+                        double entryPrice = order.getOpenPrice();
+                        double takeProfitPrice = entryPrice + (takeProfitPips * instrument.getPipValue());
+                        log.info("takeProfitPrice: " + takeProfitPrice);
+                        order.setTakeProfitPrice(takeProfitPrice);
+                    }
+
+                    if (stopLossPips > 0L) {
+                        log.info("stopLossPips: " + stopLossPips);
+                        double entryPrice = order.getOpenPrice();
+                        double stopLossPrice = entryPrice - (stopLossPips * instrument.getPipValue());
+                        log.info("stopLossPrice: " + stopLossPrice);
+                        order.setStopLossPrice(stopLossPrice);
+                    }
                 }
 
-                if (stopLossPips > 0L) {
-                    log.info("stopLossPips: " + stopLossPips);
-                    double entryPrice = order.getOpenPrice();
-                    double stopLossPrice = entryPrice - stopLossPips * order.getInstrument().getPipValue();
-                    order.setStopLossPrice(stopLossPrice);
+                if (order.isLong() == false) {
+                    if (takeProfitPips > 0L) {
+
+                        log.info("takeProfitPips: " + takeProfitPips);
+                        double entryPrice = order.getOpenPrice();
+                        double takeProfitPrice = entryPrice - (takeProfitPips * instrument.getPipValue());
+                        log.info("takeProfitPrice: " + takeProfitPrice);
+                        order.setTakeProfitPrice(takeProfitPrice);
+                    }
+
+                    if (stopLossPips > 0L) {
+                        log.info("stopLossPips: " + stopLossPips);
+                        double entryPrice = order.getOpenPrice();
+                        double stopLossPrice = entryPrice + (stopLossPips * instrument.getPipValue());
+                        log.info("stopLossPrice: " + stopLossPrice);
+                        order.setStopLossPrice(stopLossPrice);
+                    }
                 }
 
                 log.info("order edited " + order);
