@@ -235,9 +235,9 @@ public class OrderController {
 	@RequestMapping(value = "/api/v1/position", method = RequestMethod.DELETE)
 	public ClosePositionResp closePosition(@RequestParam Optional<String> dukasOrderID,
 			@RequestParam(required = false) Optional<String> clientOrderID,
-			@RequestParam(required = false) String quantity,
-			@RequestParam(required = false) String price,
-			@RequestParam(required = false) String slippage) {
+			@RequestParam(required = false) OptionalDouble quantity,
+			@RequestParam(required = false) OptionalDouble price,
+			@RequestParam(required = false) OptionalDouble slippage) {
 
 		ClosePositionResp resp = new ClosePositionResp();
 
@@ -251,9 +251,9 @@ public class OrderController {
 			long timeout = 5000;
 
 			IOrder order = strategy.closePosition(clientOrderID, dukasOrderID,
-					Double.parseDouble(quantity),
-					Double.parseDouble(price),
-					Double.parseDouble(slippage), timeout);
+					quantity == null ? 0.0 : quantity.getAsDouble(),
+					price == null ? 0.0 : price.getAsDouble(),
+					slippage == null ? 0.0 : slippage.getAsDouble(), timeout);
 
 			resp.setOrder(order);
 			resp.setCloseSuccess(true);

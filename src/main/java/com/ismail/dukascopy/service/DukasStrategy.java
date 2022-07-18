@@ -648,21 +648,17 @@ public class DukasStrategy implements IStrategy {
 
             try {
                 Instrument instrument = order.getInstrument();
+                double entryPrice = order.getOpenPrice();
+
                 if (order.isLong()) {
                     if (takeProfitPips > 0L) {
 
-                        log.info("takeProfitPips: " + takeProfitPips);
-                        double entryPrice = order.getOpenPrice();
                         double takeProfitPrice = entryPrice + (takeProfitPips * instrument.getPipValue());
-                        log.info("takeProfitPrice: " + takeProfitPrice);
                         order.setTakeProfitPrice(takeProfitPrice);
                     }
 
                     if (stopLossPips > 0L) {
-                        log.info("stopLossPips: " + stopLossPips);
-                        double entryPrice = order.getOpenPrice();
                         double stopLossPrice = entryPrice - (stopLossPips * instrument.getPipValue());
-                        log.info("stopLossPrice: " + stopLossPrice);
                         order.setStopLossPrice(stopLossPrice);
                     }
                 }
@@ -670,18 +666,12 @@ public class DukasStrategy implements IStrategy {
                 if (order.isLong() == false) {
                     if (takeProfitPips > 0L) {
 
-                        log.info("takeProfitPips: " + takeProfitPips);
-                        double entryPrice = order.getOpenPrice();
                         double takeProfitPrice = entryPrice - (takeProfitPips * instrument.getPipValue());
-                        log.info("takeProfitPrice: " + takeProfitPrice);
                         order.setTakeProfitPrice(takeProfitPrice);
                     }
 
                     if (stopLossPips > 0L) {
-                        log.info("stopLossPips: " + stopLossPips);
-                        double entryPrice = order.getOpenPrice();
                         double stopLossPrice = entryPrice + (stopLossPips * instrument.getPipValue());
-                        log.info("stopLossPrice: " + stopLossPrice);
                         order.setStopLossPrice(stopLossPrice);
                     }
                 }
