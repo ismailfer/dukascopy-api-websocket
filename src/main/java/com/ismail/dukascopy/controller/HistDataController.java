@@ -122,7 +122,7 @@ public class HistDataController {
                     st.low = askBar.getLow();
                     st.close = askBar.getClose();
                     st.volume = askBar.getVolume();
-                    st.time = askBar.getTime();
+                    st.timestamp = askBar.getTime();
                     st.spread = (st.close - bidBar.getClose()) * pipsFactor;
                     if (instrument.getType() == Type.FOREX) {
                         st.volume *= 100000.0;

@@ -1,5 +1,7 @@
 package com.ismail.dukascopy.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
@@ -34,6 +36,33 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderController {
 	@Autowired
 	private DukasStrategy strategy;
+
+	/**
+	 * Get position detail (aka Dukas Order)
+	 * 
+	 * @param clientOrderID
+	 * @param dukasOrderID
+	 * @return
+	 */
+	@RequestMapping(value = "/api/v1/positions", method = RequestMethod.GET)
+	public ArrayList<Position> getPositions() {
+
+		ArrayList<Position> positions = new ArrayList<>();
+		try {
+			List<IOrder> openOrders = strategy.getPositions();
+
+			openOrders.forEach(order -> {
+				Position position = new Position();
+				convertOrderToPosition(order, position);
+				positions.add(position);
+			});
+
+		} catch (Exception e) {
+			throw new ApiException(e.getMessage());
+		}
+
+		return positions;
+	}
 
 	/**
 	 * Get position detail (aka Dukas Order)
@@ -86,8 +115,8 @@ public class OrderController {
 			@RequestParam String orderSide,
 			@RequestParam String orderType,
 			@RequestParam double quantity,
-			@RequestParam(required = false) OptionalDouble price,
-			@RequestParam(required = false) OptionalDouble slippage) {
+			@RequestParam(required = false, defaultValue = "0.0") String price,
+			@RequestParam(required = false, defaultValue = "0.0") String slippage) {
 
 		Instrument instrument = Instrument.valueOf(instID);
 		log.info("instrument: " + instrument);
@@ -101,9 +130,13 @@ public class OrderController {
 		try {
 			long timeout = 5000;
 
-			IOrder order = strategy.openPosition(clientOrderID, instrument, OrderSide.valueOf(orderSide),
-					OrderType.valueOf(orderType), quantity,
-					price == null ? 0.0 : price.getAsDouble(), slippage == null ? 5.0 : slippage.getAsDouble(),
+			IOrder order = strategy.openPosition(clientOrderID,
+					instrument,
+					OrderSide.valueOf(orderSide),
+					OrderType.valueOf(orderType),
+					quantity,
+					Double.parseDouble(price),
+					Double.parseDouble(slippage),
 					timeout);
 
 			if (order != null) {
@@ -120,6 +153,63 @@ public class OrderController {
 			}
 		} catch (Exception e) {
 			log.error("submitOrder() error: ", e.getMessage(), e);
+
+			position.setErrorMsg(e.getMessage());
+			position.setValid(false);
+
+			// throw new ApiException("Server error: " + e.getMessage());
+		}
+
+		return position;
+	}
+
+	/**
+	 * @param clientOrderID
+	 * @param takeProfitPips
+	 * @param stopLossPips
+	 * @return
+	 */
+	@RequestMapping(value = "/api/v1/position", method = RequestMethod.PUT)
+	public Position editPosition(
+			@RequestParam(required = false) Optional<String> clientOrderID,
+			@RequestParam(required = false) Optional<String> dukasOrderID,
+			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPips,
+			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips) {
+
+		Position position = new Position();
+
+		if (dukasOrderID.isEmpty() && clientOrderID.isEmpty()) {
+			position.setErrorMsg("Either dukasOrderID or clientOrderID are mandatory");
+			position.setValid(false);
+			return position;
+		}
+
+		try {
+			long timeout = 5000;
+
+			IOrder order = strategy.editPosition(clientOrderID,
+					dukasOrderID,
+					Double.parseDouble(takeProfitPips),
+					Double.parseDouble(stopLossPips),
+					timeout);
+
+			if (order != null) {
+				position.setClientOrderID(order.getLabel());
+				position.setSymbol(order.getInstrument().name());
+
+				convertOrderToPosition(order, position);
+
+				// If canceled; means it was rejected
+				if (order.getState() == IOrder.State.CANCELED) {
+					position.setValid(false);
+					position.setErrorMsg("Order rejected");
+				} else {
+					position.setValid(true);
+
+				}
+			}
+		} catch (Exception e) {
+			log.error("editPosition() error: ", e.getMessage(), e);
 
 			position.setErrorMsg(e.getMessage());
 			position.setValid(false);
