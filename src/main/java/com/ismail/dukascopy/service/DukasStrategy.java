@@ -553,6 +553,8 @@ public class DukasStrategy implements IStrategy {
     public IOrder editPosition(
             Optional<String> clientOrderID,
             Optional<String> dukasOrderID,
+            double takeProfitPrice,
+            double stopLossPrice,
             double takeProfitPips,
             double stopLossPips,
             long timeout)
@@ -590,7 +592,8 @@ public class DukasStrategy implements IStrategy {
         // We have to submit the order in the same thread as the Context; using Reactive
         // Programming
         // So we submit a task; then wait for it to get done
-        EditPositionTask task = new EditPositionTask(order, takeProfitPips, stopLossPips);
+        EditPositionTask task = new EditPositionTask(order, takeProfitPrice, stopLossPrice, takeProfitPips,
+                stopLossPips);
         context.executeTask(task);
 
         // we have to wait for a given timeout
@@ -623,6 +626,10 @@ public class DukasStrategy implements IStrategy {
 
         public IOrder order = null;
 
+        private double takeProfitPrice;
+
+        private double stopLossPrice;
+
         private double takeProfitPips;
 
         private double stopLossPips;
@@ -637,9 +644,13 @@ public class DukasStrategy implements IStrategy {
 
         public EditPositionTask(
                 IOrder order,
+                double takeProfitPrice,
+                double stopLossPrice,
                 double takeProfitPips,
                 double stopLossPips) {
             this.order = order;
+            this.takeProfitPrice = takeProfitPrice;
+            this.stopLossPrice = stopLossPrice;
             this.takeProfitPips = takeProfitPips;
             this.stopLossPips = stopLossPips;
         }
@@ -661,17 +672,33 @@ public class DukasStrategy implements IStrategy {
                         double stopLossPrice = entryPrice - (stopLossPips * instrument.getPipValue());
                         order.setStopLossPrice(stopLossPrice);
                     }
+
+                    if (takeProfitPrice > 0L) {
+
+                        order.setTakeProfitPrice(takeProfitPrice);
+                    }
+
+                    if (stopLossPrice > 0L) {
+                        order.setStopLossPrice(stopLossPrice);
+                    }
                 }
 
                 if (order.isLong() == false) {
                     if (takeProfitPips > 0L) {
-
                         double takeProfitPrice = entryPrice - (takeProfitPips * instrument.getPipValue());
                         order.setTakeProfitPrice(takeProfitPrice);
                     }
 
                     if (stopLossPips > 0L) {
                         double stopLossPrice = entryPrice + (stopLossPips * instrument.getPipValue());
+                        order.setStopLossPrice(stopLossPrice);
+                    }
+
+                    if (takeProfitPrice > 0L) {
+                        order.setTakeProfitPrice(takeProfitPrice);
+                    }
+
+                    if (stopLossPrice > 0L) {
                         order.setStopLossPrice(stopLossPrice);
                     }
                 }
