@@ -173,6 +173,8 @@ public class OrderController {
 	public Position editPosition(
 			@RequestParam(required = false) Optional<String> clientOrderID,
 			@RequestParam(required = false) Optional<String> dukasOrderID,
+			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPrice,
+			@RequestParam(required = false, defaultValue = "0.0") String stopLossPrice,
 			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPips,
 			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips) {
 
@@ -189,6 +191,8 @@ public class OrderController {
 
 			IOrder order = strategy.editPosition(clientOrderID,
 					dukasOrderID,
+					Double.parseDouble(takeProfitPrice),
+					Double.parseDouble(stopLossPrice),
 					Double.parseDouble(takeProfitPips),
 					Double.parseDouble(stopLossPips),
 					timeout);
