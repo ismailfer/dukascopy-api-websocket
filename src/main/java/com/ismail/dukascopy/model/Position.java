@@ -37,6 +37,10 @@ public class Position {
 
     public double commission;
 
+    public double pipScale;
+
+    public double pipValue;
+
     public double stopLossPrice;
 
     public double takeProfitPrice;

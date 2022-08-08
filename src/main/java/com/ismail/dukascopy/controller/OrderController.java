@@ -282,7 +282,8 @@ public class OrderController {
 		pos.setState(order.getState().toString());
 
 		pos.setSymbol(order.getInstrument().toString());
-
+		pos.setPipValue(order.getInstrument().getPipValue());
+		pos.setPipScale(order.getInstrument().getPipScale());
 		pos.setCreationTime(order.getCreationTime());
 
 		pos.setQuantity(order.getRequestedAmount() * DukasConstants.lotSize);
