@@ -116,7 +116,10 @@ public class OrderController {
 			@RequestParam String orderType,
 			@RequestParam double quantity,
 			@RequestParam(required = false, defaultValue = "0.0") String price,
-			@RequestParam(required = false, defaultValue = "0.0") String slippage) {
+			@RequestParam(required = false, defaultValue = "0.0") String slippage,
+			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPips,
+			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips,
+			@RequestParam(required = false, defaultValue = "false") String trailingSl) {
 
 		Instrument instrument = Instrument.valueOf(instID);
 		log.info("instrument: " + instrument);
@@ -138,7 +141,8 @@ public class OrderController {
 					Double.parseDouble(price),
 					Double.parseDouble(slippage),
 					timeout);
-
+					
+				order.waitForUpdate(2000, IOrder.State.FILLED);
 			if (order != null) {
 				convertOrderToPosition(order, position);
 
@@ -176,7 +180,8 @@ public class OrderController {
 			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPrice,
 			@RequestParam(required = false, defaultValue = "0.0") String stopLossPrice,
 			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPips,
-			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips) {
+			@RequestParam(required = false, defaultValue = "0.0") String stopLossPips,
+			@RequestParam(required = false, defaultValue = "false") String trailingSl) {
 
 		Position position = new Position();
 
@@ -195,6 +200,7 @@ public class OrderController {
 					Double.parseDouble(stopLossPrice),
 					Double.parseDouble(takeProfitPips),
 					Double.parseDouble(stopLossPips),
+					Boolean.parseBoolean(trailingSl),
 					timeout);
 
 			if (order != null) {

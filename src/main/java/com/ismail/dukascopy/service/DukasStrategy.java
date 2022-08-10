@@ -518,6 +518,7 @@ public class DukasStrategy implements IStrategy {
                         quantity,
                         price,
                         slippage);
+                order.waitForUpdate(2000, IOrder.State.FILLED);
 
                 log.info("order submitted " + order);
 
@@ -557,6 +558,7 @@ public class DukasStrategy implements IStrategy {
             double stopLossPrice,
             double takeProfitPips,
             double stopLossPips,
+            boolean trailingSl,
             long timeout)
             throws Exception {
         if (context == null)
@@ -593,7 +595,7 @@ public class DukasStrategy implements IStrategy {
         // Programming
         // So we submit a task; then wait for it to get done
         EditPositionTask task = new EditPositionTask(order, takeProfitPrice, stopLossPrice, takeProfitPips,
-                stopLossPips);
+                stopLossPips, trailingSl);
         context.executeTask(task);
 
         // we have to wait for a given timeout
@@ -634,6 +636,7 @@ public class DukasStrategy implements IStrategy {
 
         private double stopLossPips;
 
+        private boolean enableSlTrailing;
         // result
 
         public Throwable error = null;
@@ -647,7 +650,9 @@ public class DukasStrategy implements IStrategy {
                 double takeProfitPrice,
                 double stopLossPrice,
                 double takeProfitPips,
-                double stopLossPips) {
+                double stopLossPips,
+                boolean enableSlTrailing) {
+            this.enableSlTrailing = enableSlTrailing;
             this.order = order;
             this.takeProfitPrice = takeProfitPrice;
             this.stopLossPrice = stopLossPrice;
@@ -668,9 +673,15 @@ public class DukasStrategy implements IStrategy {
                         order.setTakeProfitPrice(takeProfitPrice);
                     }
 
-                    if (stopLossPips > 0L) {
+                    if (stopLossPips > 0L && !enableSlTrailing) {
                         double stopLossPrice = entryPrice - (stopLossPips * instrument.getPipValue());
                         order.setStopLossPrice(stopLossPrice);
+                    }
+
+                    if (stopLossPips > 0L && enableSlTrailing) {
+                        double stopLossPrice = entryPrice - (stopLossPips * instrument.getPipValue());
+                        order.setStopLossPrice(stopLossPrice, OfferSide.BID, stopLossPips);
+
                     }
 
                     if (takeProfitPrice > 0L) {
@@ -678,8 +689,12 @@ public class DukasStrategy implements IStrategy {
                         order.setTakeProfitPrice(takeProfitPrice);
                     }
 
-                    if (stopLossPrice > 0L) {
-                        order.setStopLossPrice(stopLossPrice);
+                    if (stopLossPrice > 0L && !enableSlTrailing) {
+                        order.setStopLossPrice(stopLossPrice, OfferSide.BID, stopLossPips);
+                    }
+
+                    if (stopLossPrice > 0L && stopLossPips > 0L && enableSlTrailing) {
+                        order.setStopLossPrice(stopLossPrice, OfferSide.BID, stopLossPips);
                     }
                 }
 
@@ -691,7 +706,7 @@ public class DukasStrategy implements IStrategy {
 
                     if (stopLossPips > 0L) {
                         double stopLossPrice = entryPrice + (stopLossPips * instrument.getPipValue());
-                        order.setStopLossPrice(stopLossPrice);
+                        order.setStopLossPrice(stopLossPrice, OfferSide.BID, stopLossPips);
                     }
 
                     if (takeProfitPrice > 0L) {
@@ -699,9 +714,12 @@ public class DukasStrategy implements IStrategy {
                     }
 
                     if (stopLossPrice > 0L) {
-                        order.setStopLossPrice(stopLossPrice);
+                        order.setStopLossPrice(stopLossPrice, OfferSide.BID, stopLossPips);
                     }
                 }
+
+                order.waitForUpdate(2000, IOrder.State.FILLED);
+
 
                 log.info("order edited " + order);
 
