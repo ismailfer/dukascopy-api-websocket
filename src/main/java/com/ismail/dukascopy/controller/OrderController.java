@@ -104,16 +104,13 @@ public class OrderController {
 	 * @param buySide
 	 * @param orderType
 	 * @param quantity
-	 * @param price         optional: default 0.0
-	 * @param slippage      optional; default 5.0 pips
+	 * @param price optional: default 0.0
+	 * @param slippage optional; default 5.0 pips
 	 * @return
 	 */
 	@RequestMapping(value = "/api/v1/position", method = RequestMethod.POST)
-	public Position openPosition(
-			@RequestParam String clientOrderID,
-			@RequestParam String instID,
-			@RequestParam String orderSide,
-			@RequestParam String orderType,
+	public Position openPosition(@RequestParam String clientOrderID, @RequestParam String instID,
+			@RequestParam String orderSide, @RequestParam String orderType,
 			@RequestParam double quantity,
 			@RequestParam(required = false, defaultValue = "0.0") String price,
 			@RequestParam(required = false, defaultValue = "0.0") String slippage,
@@ -133,16 +130,13 @@ public class OrderController {
 		try {
 			long timeout = 5000;
 
-			IOrder order = strategy.openPosition(clientOrderID,
-					instrument,
-					OrderSide.valueOf(orderSide),
-					OrderType.valueOf(orderType),
-					quantity,
-					Double.parseDouble(price),
-					Double.parseDouble(slippage),
-					timeout);
-					
-				order.waitForUpdate(2000, IOrder.State.FILLED);
+			IOrder order = strategy.openPosition(clientOrderID, instrument,
+					OrderSide.valueOf(orderSide), OrderType.valueOf(orderType), quantity,
+					Double.parseDouble(price), Double.parseDouble(slippage),
+					Double.parseDouble(takeProfitPips), Double.parseDouble(stopLossPips),
+					Boolean.parseBoolean(trailingSl), timeout);
+
+			order.waitForUpdate(2000, IOrder.State.FILLED);
 			if (order != null) {
 				convertOrderToPosition(order, position);
 
@@ -161,7 +155,7 @@ public class OrderController {
 			position.setErrorMsg(e.getMessage());
 			position.setValid(false);
 
-			// throw new ApiException("Server error: " + e.getMessage());
+			throw new ApiException("Server error: " + e.getMessage());
 		}
 
 		return position;
@@ -174,8 +168,7 @@ public class OrderController {
 	 * @return
 	 */
 	@RequestMapping(value = "/api/v1/position", method = RequestMethod.PUT)
-	public Position editPosition(
-			@RequestParam(required = false) Optional<String> clientOrderID,
+	public Position editPosition(@RequestParam(required = false) Optional<String> clientOrderID,
 			@RequestParam(required = false) Optional<String> dukasOrderID,
 			@RequestParam(required = false, defaultValue = "0.0") String takeProfitPrice,
 			@RequestParam(required = false, defaultValue = "0.0") String stopLossPrice,
@@ -194,14 +187,10 @@ public class OrderController {
 		try {
 			long timeout = 5000;
 
-			IOrder order = strategy.editPosition(clientOrderID,
-					dukasOrderID,
-					Double.parseDouble(takeProfitPrice),
-					Double.parseDouble(stopLossPrice),
-					Double.parseDouble(takeProfitPips),
-					Double.parseDouble(stopLossPips),
-					Boolean.parseBoolean(trailingSl),
-					timeout);
+			IOrder order = strategy.editPosition(clientOrderID, dukasOrderID,
+					Double.parseDouble(takeProfitPrice), Double.parseDouble(stopLossPrice),
+					Double.parseDouble(takeProfitPips), Double.parseDouble(stopLossPips),
+					Boolean.parseBoolean(trailingSl), timeout);
 
 			if (order != null) {
 				position.setClientOrderID(order.getLabel());
@@ -235,10 +224,9 @@ public class OrderController {
 	 * 
 	 * @param dukasOrderID
 	 * @param clientOrderID optional
-	 * @param quantity      optional. Defaults to order quantity
-	 * @param price         optional: default to 0.0 (market order to close
-	 *                      position)
-	 * @param slippage      optional; default 5.0 pips
+	 * @param quantity optional. Defaults to order quantity
+	 * @param price optional: default to 0.0 (market order to close position)
+	 * @param slippage optional; default 5.0 pips
 	 * @return
 	 * @throws JFException
 	 */
