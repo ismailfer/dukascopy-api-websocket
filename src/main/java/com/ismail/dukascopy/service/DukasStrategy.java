@@ -381,7 +381,7 @@ public class DukasStrategy implements IStrategy {
 			if (orderType == OrderType.Market) {
 				cmd = OrderCommand.BUY;
 			} else if (orderType == OrderType.Limit) {
-				cmd = OrderCommand.BUY;
+				cmd = OrderCommand.BUYLIMIT;
 			} else if (orderType == OrderType.Stop) {
 				cmd = OrderCommand.BUYSTOP;
 			} else {
@@ -391,7 +391,7 @@ public class DukasStrategy implements IStrategy {
 			if (orderType == OrderType.Market) {
 				cmd = OrderCommand.SELL;
 			} else if (orderType == OrderType.Limit) {
-				cmd = OrderCommand.SELL;
+				cmd = OrderCommand.SELLLIMIT;
 			} else if (orderType == OrderType.Stop) {
 				cmd = OrderCommand.SELLSTOP;
 			} else {
