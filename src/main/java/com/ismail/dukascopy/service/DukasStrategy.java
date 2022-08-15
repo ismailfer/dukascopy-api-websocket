@@ -867,6 +867,11 @@ public class DukasStrategy implements IStrategy {
 			return null;
 		}
 
+		if (timeTo == 0L) {
+			timeTo = context.getHistory().getPreviousBarStart(period,
+					context.getHistory().getLastTick(instrument).getTime());
+		}
+
 		List<IBar> bars = context.getHistory().getBars(instrument, period, pOfferSide,
 				Filter.WEEKENDS, timeFrom, timeTo);
 

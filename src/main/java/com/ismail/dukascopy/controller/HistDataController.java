@@ -10,6 +10,7 @@ import com.ismail.dukascopy.model.Candle;
 import com.ismail.dukascopy.service.DukasStrategy;
 import com.ismail.dukascopy.util.DukasUtil;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -29,18 +30,15 @@ public class HistDataController {
     private DukasStrategy strategy;
 
     @RequestMapping(value = "/api/v1/history", method = RequestMethod.GET)
-    public List<Candle> getHistData(
-            @RequestParam String instID,
-            @RequestParam(defaultValue = "DAILY") String timeFrame,
-            @RequestParam long from,
+    public List<Candle> getHistData(@RequestParam String instID,
+            @RequestParam(defaultValue = "DAILY") String timeFrame, @RequestParam long from,
             @RequestParam(required = false, defaultValue = "0") String to) {
 
         Instrument instrument = Instrument.valueOf(instID);
         long timeTo = Long.parseLong(to);
 
         if (instrument == null)
-            throw new ApiException(
-                    "Invalid instrument: " + instID);
+            throw new ApiException("Invalid instrument: " + instID);
 
         Period period = null;
 
@@ -77,32 +75,23 @@ public class HistDataController {
         // from
         if (from == 0L) {
             from = System.currentTimeMillis() - DukasUtil.DAY * 5;
-            timeTo = System.currentTimeMillis();
-
             // normalize time
             long periodInMillis = period.getInterval();
 
             from = from - from % periodInMillis;
-            timeTo = timeTo - timeTo % periodInMillis;
-        } else {
-            timeTo = System.currentTimeMillis();
-            // normalize time
-            long periodInMillis = period.getInterval();
-            timeTo = timeTo - timeTo % periodInMillis;
+        } else if (from > 0L) {
+            Calendar calendar = Calendar.getInstance();
+            int day = calendar.get(Calendar.DAY_OF_WEEK);
+            if (day == Calendar.MONDAY) {
+                from -= DukasUtil.DAY * 2;
+            }
         }
+
         try {
-            List<IBar> askBars = strategy.getHistData(
-                    instrument,
-                    period,
-                    OfferSide.ASK,
-                    from,
-                    timeTo);
-            List<IBar> bidBars = strategy.getHistData(
-                    instrument,
-                    period,
-                    OfferSide.BID,
-                    from,
-                    timeTo);
+            List<IBar> askBars =
+                    strategy.getHistData(instrument, period, OfferSide.ASK, from, timeTo);
+            List<IBar> bidBars =
+                    strategy.getHistData(instrument, period, OfferSide.BID, from, timeTo);
 
             int pipsFactor = 1;
 
